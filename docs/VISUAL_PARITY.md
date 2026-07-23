@@ -169,3 +169,24 @@ konumları birebir aynıdır.
   yakalaması arasında da %0.291 gözlendi → tek seferlik capture/render
   jitter'ı (bimodal metin antialias), kod regresyonu değil.
 - Sprint 1/2 golden'ları DEĞİŞTİRİLMEDİ.
+
+
+---
+
+# CI Görsel Kapısı Notu (Sprint 4)
+
+CI (`scripts/ci-visual-check.mjs`, macOS runner) 22 section + 6 hero
+görüntüsünü repodaki onaylı golden'lara karşı ≤%0.75 eşikle doğrular.
+**Full-page görüntüler CI kapısının bilinçli olarak dışındadır:** kaynaktaki
+`background-attachment: fixed` hero'nun full-page stitching davranışı
+compositor/ortam tanımlıdır — CI ampirik verisi makineler arasında %3-14
+sapma gösterdi (aynı makinede kod değişmeden bile ±%0.5 oynadığı yukarıda
+belgeliydi). Bu ölçüm kodu değil ortamı ölçer. Kaynak↔clone full-page parity
+kanıtı, aynı ortamda üretilen bu dokümandaki lokal karşılaştırmalardır;
+section+hero seti 13 bölümün tamamını yapısal olarak kapsar.
+
+Determinizm bayrakları: tüm capture'lar `--force-color-profile=srgb
+--disable-gpu` ile alınır (GPU'lu/GPU'suz makineler fotoğraf küçültmeyi
+farklı resample eder; ilk iki CI koşusunda galeri/hakkımızda farklarının
+birebir aynı değerlerle tekrarlaması bu deterministik ortam farkını
+kanıtladı). Golden'lar bu bayraklarla yeniden üretildi (23.07.2026).

@@ -98,4 +98,12 @@ jobs:
       # golden'lar tek referanstır. Eşikler scripts/ci-visual-check.mjs içinde
       # belgelidir; golden güncelleme ayrı ve bilinçli bir işlemdir.
       - name: Görsel regresyon kapısı
-        run: node scripts/ci-visual-check.mjs --base http://localhost:4173
+        run: node scripts/ci-visual-check.mjs --base http://localhost:4173 --out ci-visual-out
+
+      - name: Görsel çıktılar (yalnızca başarısızlıkta)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-visual-captures
+          path: ci-visual-out/
+          retention-days: 7

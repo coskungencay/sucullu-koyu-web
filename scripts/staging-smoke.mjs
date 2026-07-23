@@ -67,7 +67,8 @@ async function newPage(width, height) {
     if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 120));
   });
   page.on('response', (r) => {
-    if (r.status() >= 400 && r.url().startsWith(base)) brokenAssets.push(`${r.status()} ${r.url()}`);
+    if (r.status() >= 400 && r.url().startsWith(base))
+      brokenAssets.push(`${r.status()} ${r.url()}`);
   });
   page.on('request', (r) => {
     if (r.url().includes('m3u8') || r.url().includes('kameraizle')) cameraRequests.push(r.url());
@@ -80,9 +81,7 @@ async function newPage(width, height) {
   await page.goto(base + '/', { waitUntil: 'load', timeout: 90000 });
   await page.evaluate(() => document.fonts.ready);
   check('title', (await page.title()) === 'Sücüllü Köyü | Yalvaç / Isparta');
-  const desc = await page
-    .locator('meta[name="description"]')
-    .getAttribute('content');
+  const desc = await page.locator('meta[name="description"]').getAttribute('content');
   check('meta description', (desc ?? '').startsWith('Sücüllü Köyü - Isparta ili'));
   const ids = await page.$$eval('section[id]', (els) => els.map((e) => e.id));
   check(
