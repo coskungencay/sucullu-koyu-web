@@ -24,6 +24,7 @@
     "@playwright/test": "1.52.0",
     "@types/node": "^22.15.21",
     "eslint": "9.27.0",
+    "happy-dom": "^17.4.7",
     "pixelmatch": "7.1.0",
     "pngjs": "7.0.0",
     "prettier": "3.5.3",

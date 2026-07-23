@@ -64,3 +64,56 @@ mahalleler, galeri, video, ekonomi, canli-kamera, konum, iletisim.
 - Galeri 53 görsel açık hali, lightbox ilk/orta/son, hover durumları,
   mobil menü açık hali (Sprint 2)
 - Kamera duvarı grid/scanline/offline parity ölçümü (Sprint 3)
+
+---
+
+# Sprint 2 Eki — Etkileşim Parity Raporu
+
+**Tarih:** 23 Temmuz 2026
+
+## Sprint 1 regression (değişmemesi gereken alanlar)
+
+Sprint 2 kodu üzerinden clone yeniden yakalandı
+(`reference/screenshots/clone-sprint2/`) ve **Sprint 1 kaynak golden'larına
+dokunulmadan** onlarla diff alındı (`diff-sprint2-regression/`):
+
+- 22/22 section screenshot'ı: **%0.000** (değişim yok)
+- Full-page: 1440 %0.463, 1366 %0.362, 1024 %0.018, 768 %0.368, 390 %0.027,
+  360 %0.003 — hepsi Sprint 1 değerleriyle aynı bantta veya daha iyi; kötüleşme yok.
+- Üst bant farkları yine `background-attachment: fixed` stitching artefaktı
+  (bkz. yukarıdaki "Bilinen artefaktlar" §1); gerçek layout farkı değildir.
+
+## Interaction golden'ları (kaynak vs clone, MASKESİZ galeri/lightbox)
+
+Yakalama: `scripts/capture-interactions.mjs` — font + hero settle, lazy
+görsellerin yüklenmesi ve animasyonların bitmesi beklenerek. Dizinler:
+`reference/screenshots/interactions/{source,clone,diff}`.
+
+| Senaryo | 1440×900 | 390×844 |
+|---|---:|---:|
+| Galeri başlangıç (12) | %0.000 | %0.000 |
+| Galeri expanded (53) | %0.000 | %0.000 |
+| Lightbox ilk görsel | %0.000 | %0.000 |
+| Lightbox orta (27/53) | %0.000 | %0.000 |
+| Lightbox son (53/53) | %0.000 | %0.000 |
+| Galeri kartı hover | %0.000 | — |
+| Lightbox next hover | %0.000 | — |
+| Lightbox kontrolleri (alt yarı) | — | %0.000 |
+| Mobile menu açık | — | %0.006 |
+| Navbar scrolled | %0.000 | %0.000 |
+| Video bölümü | %0.000 | %0.000 |
+| Focus-visible örneği | — | clone-only golden |
+
+Notlar:
+
+1. **Navbar scrolled ilk ölçümde %0.305 çıkmıştı** — 120 px'lik şeride giren
+   stats sayaçlarının 2 sn'lik animasyonu iki tarafta farklı anda yakalanmıştı.
+   Capture script'i sayaç settle'ını bekleyecek şekilde düzeltildi; fark %0.000.
+   Gerçek bir layout/tasarım farkı değildi.
+2. **Mobile menu %0.006** — menü kenarı/hamburger X'inde birkaç antialias
+   pikseli; eşiklerin çok altında.
+3. **Focus-visible golden'ı yalnızca clone'dan alınır**: kaynak sitede galeri
+   kartları klavyeyle odaklanabilir değildir (erişilebilirlik eklentimiz),
+   dolayısıyla kaynak karşılığı yoktur.
+4. Expand öncesi lightbox sayacı kaynakta görünür set üzerinden hesaplanır
+   ("1 / 12"); clone bu davranışı birebir korur (E2E ile sabitlenmiştir).

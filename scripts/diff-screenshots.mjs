@@ -1,9 +1,9 @@
 /**
  * Kaynak-clone görsel diff raporu (pixelmatch).
  *
- * Kullanım: node scripts/diff-screenshots.mjs
- * reference/screenshots/source ve .../clone içindeki aynı adlı PNG'leri
- * karşılaştırır, .../diff altına fark görselini ve konsola oranları yazar.
+ * Kullanım: node scripts/diff-screenshots.mjs [--source <dir>] [--clone <dir>] [--out <dir>]
+ * Varsayılan: reference/screenshots/{source,clone,diff}. Aynı adlı PNG'leri
+ * karşılaştırır, out dizinine fark görselini ve konsola oranları yazar.
  */
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -11,9 +11,14 @@ import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const SRC = join(ROOT, 'reference/screenshots/source');
-const CLONE = join(ROOT, 'reference/screenshots/clone');
-const DIFF = join(ROOT, 'reference/screenshots/diff');
+const args = process.argv.slice(2);
+const argOf = (name, fallback) => {
+  const i = args.indexOf(name);
+  return i >= 0 ? join(ROOT, args[i + 1]) : join(ROOT, fallback);
+};
+const SRC = argOf('--source', 'reference/screenshots/source');
+const CLONE = argOf('--clone', 'reference/screenshots/clone');
+const DIFF = argOf('--out', 'reference/screenshots/diff');
 mkdirSync(DIFF, { recursive: true });
 
 const files = readdirSync(SRC).filter((f) => f.endsWith('.png'));

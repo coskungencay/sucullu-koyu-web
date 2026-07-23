@@ -1,0 +1,14 @@
+/* =============================================
+   ERİŞİLEBİLİRLİK EKLERİ (Sprint 2)
+   Kaynak tasarımı değiştirmez; yalnızca klavye focus'unda görünür.
+   main.css kaynak style.css'in birebir portu olduğundan ayrı dosyadadır.
+   ============================================= */
+
+.gallery-item:focus-visible,
+.btn-outline:focus-visible,
+.lightbox-close:focus-visible,
+.lightbox-nav:focus-visible,
+.back-to-top:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
