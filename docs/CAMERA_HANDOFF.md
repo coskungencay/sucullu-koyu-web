@@ -22,7 +22,7 @@ Muhtemel arıza alanları (CTO §1 ile uyumlu, teyit gerektirir): silinen/expire
 DNS kaydı, durmuş tünel ajanı (ör. cloudflared vb.), kapalı yayın sunucusu,
 yanlış origin portu/proxy hedefi, firewall, RTSP→HLS çevirici servisinin durması.
 
-## 2. Clone'daki kamera davranış sözleşmesi (bu tur uygulandı)
+## 2. Clone'daki kamera davranış sözleşmesi (Sprint 3 ile tamamlandı)
 
 - Base URL **yalnızca** `VITE_CAMERA_BASE_URL` env değişkeninden gelir (`.env.example`).
 - Env boşsa (mevcut durum): **hiçbir ağ isteği yapılmaz**; ana sayfa kartları
@@ -36,13 +36,15 @@ yanlış origin portu/proxy hedefi, firewall, RTSP→HLS çevirici servisinin du
 - hls.js **1.4.12** npm'de pinli; `@latest` kullanılmıyor.
 - Frontend'e RTSP adresi, kullanıcı adı/parola, kamera IP'si konmadı ve konmayacak.
 
-## 3. Kaynaktaki kopyalanmayan teknik kusurlar (CTO §7.3)
+## 3. Kaynaktaki kopyalanmayan teknik kusurlar (CTO §7.3) — GİDERİLDİ
 
-Sprint 3 player'ı şunları düzelterek yazılacak (görsel sonuç aynı kalacak):
-interval/timer leak, manuel `activeCams ++/--` (state set'ten türetme:
-`deriveActiveCount()` hazır), sınırsız agresif reconnect (backoff+jitter:
-`retryDelayMs()` hazır ve unit testli), 9 yayının koşulsuz eşzamanlı açılması,
-inline hardcoded endpoint.
+Sprint 3'te state-machine tabanlı player yazıldı (görsel sonuç birebir):
+timer leak yok (tek retry + tek stall timer, tam cleanup), aktif sayaç state
+set'inden türetiliyor, backoff+jitter ile sınırlı hızlı retry sonrası offline,
+ana sayfada IntersectionObserver ile görünürlüğe bağlı init, endpoint yalnızca
+env/config. hls.js 1.4.12 yalnızca live modda dynamic import edilir.
+Mimari: `docs/CAMERA_PLAYER_ARCHITECTURE.md`. Deterministik test modları:
+`?cam=mock-loading | mock-offline | mock-live[&live=0..9]`.
 
 ## 4. Gerçek entegrasyon öncesi müşteriden istenecekler (özet)
 

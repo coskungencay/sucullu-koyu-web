@@ -58,12 +58,34 @@ node scripts/diff-screenshots.mjs --source reference/screenshots/interactions/so
 
 Sonuçlar ve yöntem: `docs/VISUAL_PARITY.md`.
 
-## Kamera yapılandırması
+## Kamera yapılandırması (Sprint 3)
 
-`VITE_CAMERA_BASE_URL` boşken (varsayılan) hiçbir kamera ağ isteği yapılmaz;
-UI kaynakla aynı loading/offline durumunu gösterir. Bkz. `.env.example` ve
-`docs/CAMERA_HANDOFF.md`. Kamera adı/sırası tek kaynağı:
-`src/camera/camera-current-map.json`.
+`VITE_CAMERA_BASE_URL` boşken (varsayılan) **disabled** mod: hiçbir kamera ağ
+isteği yapılmaz; UI kaynakla aynı loading/offline durumunu gösterir. Geçerli
+bir HTTPS base URL tanımlandığında **live** mod devreye girer (hls.js 1.4.12
+yalnızca o zaman dynamic import edilir). Query ile live moda geçilemez.
+
+Deterministik test modları (yalnızca whitelist; ağ isteği üretmez):
+
+```text
+/?cam=mock-loading            # ana sayfa kartları spinner'da
+/?cam=mock-offline            # Bağlantı Yok durumu
+/canli-kamera.html?cam=mock-live          # 9/9 AKTİF
+/canli-kamera.html?cam=mock-live&live=3   # 3/9 AKTİF
+```
+
+Mimari (state machine, driver katmanı, retry/stall, cleanup):
+`docs/CAMERA_PLAYER_ARCHITECTURE.md`. Kamera adı/sırası tek kaynağı:
+`src/camera/camera-current-map.json`. Duvar klavyesi: `f` tam ekran,
+`r` yenile, `Escape` büyütmeyi kapatır.
+
+Kamera golden'ları:
+
+```bash
+node scripts/capture-camera.mjs --base https://www.sucullukoyu.com --out reference/screenshots/camera/source
+node scripts/capture-camera.mjs --base http://localhost:4173 --out reference/screenshots/camera/clone --clone-extras
+node scripts/diff-screenshots.mjs --source reference/screenshots/camera/source --clone reference/screenshots/camera/clone --out reference/screenshots/camera/diff
+```
 
 ## Dizinler
 
@@ -78,7 +100,7 @@ UI kaynakla aynı loading/offline durumunu gösterir. Bkz. `.env.example` ve
 - ✅ Sprint 0 — Forensic snapshot
 - ✅ Sprint 1 — Ana sayfa statik parity
 - ✅ Sprint 2 — Galeri 12→53, lightbox, klavye/erişilebilirlik, video testleri
-- ⏳ Sprint 3 — Kamera UI parity + player lifecycle (onay bekliyor)
-- ⏳ Sprint 4 — Hardening
+- ✅ Sprint 3 — Kamera UI parity + state-machine player lifecycle
+- ⏳ Sprint 4 — Hardening (onay bekliyor)
 
 Production deploy, DNS değişikliği ve gerçek kamera entegrasyonu ayrı onay gerektirir.

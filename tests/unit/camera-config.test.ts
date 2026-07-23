@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildManifestUrl,
   byHomeOrder,
   byWallOrder,
   cameras,
   deriveActiveCount,
-  getCameraBaseUrl,
+  getCameraBaseUrlRaw,
   retryDelayMs,
 } from '../../src/camera/camera-config';
+import { buildManifestUrl } from '../../src/camera/camera-url';
 import type { CameraPlayerState } from '../../src/shared/types';
 
 describe('camera config', () => {
@@ -70,11 +70,10 @@ describe('URL builder', () => {
     );
   });
 
-  it('env boş/eksikse base URL boş string olur, sondaki slash kırpılır', () => {
-    expect(getCameraBaseUrl({})).toBe('');
-    expect(getCameraBaseUrl({ VITE_CAMERA_BASE_URL: '  ' })).toBe('');
-    expect(getCameraBaseUrl({ VITE_CAMERA_BASE_URL: 'https://example.test/' })).toBe(
-      'https://example.test',
+  it('ham env değeri okunur (doğrulama camera-url/camera-mode katmanında)', () => {
+    expect(getCameraBaseUrlRaw({})).toBe('');
+    expect(getCameraBaseUrlRaw({ VITE_CAMERA_BASE_URL: 'https://example.test/' })).toBe(
+      'https://example.test/',
     );
   });
 });
@@ -82,12 +81,12 @@ describe('URL builder', () => {
 describe('aktif kamera sayısı türetme', () => {
   it('yalnızca playing durumundakileri sayar', () => {
     const states: CameraPlayerState[] = [
-      'playing',
-      'loading',
-      'offline',
-      'playing',
-      'retry-wait',
-      'stalled',
+      { status: 'playing', startedAt: 1 },
+      { status: 'loading', attempt: 0 },
+      { status: 'offline', reason: 'network-error' },
+      { status: 'playing', startedAt: 2 },
+      { status: 'retry-wait', attempt: 1, retryAt: 100 },
+      { status: 'stalled', lastProgressAt: 50 },
     ];
     expect(deriveActiveCount(states)).toBe(2);
     expect(deriveActiveCount([])).toBe(0);

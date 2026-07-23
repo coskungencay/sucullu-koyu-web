@@ -8,17 +8,11 @@ import cameraMap from './camera-current-map.json';
  */
 export const cameras: CameraConfig[] = cameraMap.cameras.map((c) => ({ ...c, enabled: true }));
 
-/** Base URL env üzerinden gelir; tanımlı değilse hiçbir ağ isteği yapılmaz. */
-export function getCameraBaseUrl(
+/** Ham env değeri; doğrulama camera-url.ts / camera-mode.ts'dedir. */
+export function getCameraBaseUrlRaw(
   env: Record<string, string | undefined> = import.meta.env,
 ): string {
-  const raw = env.VITE_CAMERA_BASE_URL ?? '';
-  return raw.trim().replace(/\/+$/, '');
-}
-
-export function buildManifestUrl(baseUrl: string, streamPath: string): string | null {
-  if (!baseUrl) return null;
-  return `${baseUrl}/${streamPath}/index.m3u8`;
+  return env.VITE_CAMERA_BASE_URL ?? '';
 }
 
 export function byHomeOrder(list: CameraConfig[] = cameras): CameraConfig[] {
@@ -32,7 +26,7 @@ export function byWallOrder(list: CameraConfig[] = cameras): CameraConfig[] {
 /** Aktif sayaç state set'inden türetilir; manuel ++/-- yasak (CTO 7.3). */
 export function deriveActiveCount(states: Iterable<CameraPlayerState>): number {
   let n = 0;
-  for (const s of states) if (s === 'playing') n++;
+  for (const s of states) if (s.status === 'playing') n++;
   return n;
 }
 

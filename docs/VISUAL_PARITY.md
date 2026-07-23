@@ -117,3 +117,55 @@ Notlar:
    dolayısıyla kaynak karşılığı yoktur.
 4. Expand öncesi lightbox sayacı kaynakta görünür set üzerinden hesaplanır
    ("1 / 12"); clone bu davranışı birebir korur (E2E ile sabitlenmiştir).
+
+---
+
+# Sprint 3 Eki — Kamera UI Parity Raporu
+
+**Tarih:** 23 Temmuz 2026
+**Yakalama:** `scripts/capture-camera.mjs` — iki tarafta da AYNI prosedür:
+fontlar settle, kaynak duvar için 20 sn offline oturma beklemesi, CSS
+animasyonları dondurulur (spinner/pulse/blink fazı yakalama anına bağlı
+olduğundan; her iki tarafa aynı işlem), duvarda `#clock` maskeli.
+Dizinler: `reference/screenshots/camera/{source,clone,diff}`.
+
+## Kaynak ↔ clone karşılaştırmaları
+
+| Senaryo | Diff |
+|---|---:|
+| Duvar offline 1440×900 | %0.000 |
+| Duvar offline 1366×768 | %0.000 |
+| Duvar offline 390×844 (kaynak 3×3 birebir) | %0.000 |
+| Duvar offline 360×800 (kaynak 3×3 birebir) | %0.000 |
+| Duvar tek hücre büyütülmüş | %0.000 |
+| Duvar alt bar görünür | %0.000 |
+| Duvar mute active (SES AÇ + active) | %0.000 |
+| Ana sayfa kamera CTA hover | %0.000 |
+| Ana sayfa kamera section | %0.196 * |
+| Ana sayfa kamera kartı hover | %0.196 * |
+
+\* **Dinamik durum zamanlaması, layout farkı değil:** kaynak ana sayfa
+kartları NXDOMAIN nedeniyle loading↔offline arasında salınır ve yakalama
+anında "Bağlantı Yok" gösteriyordu; clone'un disabled varsayılanı spinner'da
+bekler. Kanıt: clone `?cam=mock-offline` görünümü kaynağın offline anıyla
+diff'lendiğinde **%0.000** (`home-camera-offline` golden'ı). İkon/metin
+konumları birebir aynıdır.
+
+## Clone-only golden'lar (kaynakta üretilemez)
+
+- `wall-mock-loading-1440x900` — tüm hücreler BAĞLANIYOR
+- `wall-mock-live-1440x900` — 9/9 AKTİF, tüm rozetler CANLI
+- `wall-mock-live-3of9-1440x900` — 3/9 AKTİF deterministik karışık durum
+- `home-camera-offline/live-1440x900` — ana sayfa mock durumları
+
+## Sprint 1 + Sprint 2 regression (Sprint 3 build'i üzerinde)
+
+- Sprint 1: 22/22 section **%0.000**; full-page farkları bilinen fixed-bg
+  stitching artefakt bandında (≤%0.95; kod değişmeden yapılan baseline
+  yeniden-çekiminde de aynı bant gözlendi), hero viewport ≤%0.05.
+- Sprint 2: 17/18 interaction golden'ı **%0.000**. `mobile-menu-open` tek
+  koşuda %0.291 ölçüldü; aynı build'in ardışık yakalamaları kaynak golden'la
+  **%0.000 / %0.002 / %0.005 / %0.051** eşleşti ve aynı build'in iki
+  yakalaması arasında da %0.291 gözlendi → tek seferlik capture/render
+  jitter'ı (bimodal metin antialias), kod regresyonu değil.
+- Sprint 1/2 golden'ları DEĞİŞTİRİLMEDİ.
