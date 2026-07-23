@@ -1,0 +1,87 @@
+{
+  "auditDate": "2026-07-23",
+  "sourceHome": "https://www.sucullukoyu.com/",
+  "sourceWall": "https://sucullukoyu.com/canli-kamera.html",
+  "observedBaseUrl": "https://kameraizle.sucullukoyu.com",
+  "manifestPattern": "{baseUrl}/{streamPath}/index.m3u8",
+  "observedFailure": {
+    "sampleUrl": "https://kameraizle.sucullukoyu.com/kamera1/index.m3u8",
+    "httpStatus": 502,
+    "title": "502 Bad Gateway",
+    "message": "[Errno 111] Connection refused"
+  },
+  "cameras": [
+    {
+      "id": "camera-01",
+      "streamPath": "kamera1",
+      "homeOrder": 1,
+      "homeLabel": "KAMERA 01",
+      "wallOrder": 1,
+      "wallLabel": "KAMERA 01"
+    },
+    {
+      "id": "camera-02",
+      "streamPath": "kamera2",
+      "homeOrder": 2,
+      "homeLabel": "KAMERA 02",
+      "wallOrder": 2,
+      "wallLabel": "KAMERA 02"
+    },
+    {
+      "id": "camera-06",
+      "streamPath": "kamera6",
+      "homeOrder": 3,
+      "homeLabel": "KAMERA 04",
+      "wallOrder": 3,
+      "wallLabel": "KAMERA 03"
+    },
+    {
+      "id": "camera-05",
+      "streamPath": "kamera5",
+      "homeOrder": 4,
+      "homeLabel": "KAMERA 05",
+      "wallOrder": 4,
+      "wallLabel": "KAMERA 04"
+    },
+    {
+      "id": "camera-07",
+      "streamPath": "kamera7",
+      "homeOrder": 5,
+      "homeLabel": "KAMERA 07",
+      "wallOrder": 5,
+      "wallLabel": "KAMERA 05"
+    },
+    {
+      "id": "camera-08",
+      "streamPath": "kamera8",
+      "homeOrder": 6,
+      "homeLabel": "KAMERA 08",
+      "wallOrder": 6,
+      "wallLabel": "KAMERA 06"
+    },
+    {
+      "id": "camera-11",
+      "streamPath": "kamera11",
+      "homeOrder": 7,
+      "homeLabel": "KAMERA 11",
+      "wallOrder": 8,
+      "wallLabel": "KAMERA 08"
+    },
+    {
+      "id": "camera-10",
+      "streamPath": "kamera10",
+      "homeOrder": 8,
+      "homeLabel": "KAMERA 10",
+      "wallOrder": 7,
+      "wallLabel": "KAMERA 07"
+    },
+    {
+      "id": "camera-p850",
+      "streamPath": "p850",
+      "homeOrder": 9,
+      "homeLabel": "P850",
+      "wallOrder": 9,
+      "wallLabel": "KAMERA 09"
+    }
+  ]
+}

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sücüllü Köyü — Canlı Kamera</title>
+    <link rel="stylesheet" href="/fonts/fonts-camera.css">
+    <style>
+        :root {
+            --bg: #080c0f;
+            --panel: #0d1317;
+            --border: #1a2a35;
+            --accent: #00e5ff;
+            --accent2: #00ff88;
+            --warn: #ff4444;
+            --text: #c8d8e0;
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Rajdhani', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent2);
+            box-shadow: 0 0 8px var(--accent2);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent2); }
+            50% { opacity: 0.5; box-shadow: 0 0 18px var(--accent2); }
+        }
+
+        .site-title {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .site-title span { color: var(--accent); }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        #camCount { color: var(--accent); }
+        #clock { color: var(--accent2); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, minmax(0, 1fr));
+            flex: 1;
+            gap: 2px;
+            background: #000;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .camera-cell {
+            position: relative;
+            background: #050a0d;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-cell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            z-index: 5;
+            transition: border-color 0.2s;
+        }
+
+        .camera-cell:hover::after { border-color: var(--accent); }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .camera-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            z-index: 10;
+            border-left: 2px solid var(--accent);
+        }
+
+        .camera-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--mono);
+            font-size: 10px;
+            z-index: 10;
+            background: rgba(0,0,0,0.65);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--warn);
+        }
+
+        .status-dot.live {
+            background: var(--accent2);
+            box-shadow: 0 0 6px var(--accent2);
+            animation: blink 2s infinite;
+        }
+
+        .status-text { color: var(--text); font-size: 10px; }
+        .status-dot.live + .status-text { color: var(--accent2); }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: #050a0d;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            z-index: 8;
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        .camera-cell.fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+        }
+
+        .camera-cell.fullscreen video { object-fit: contain; }
+
+        .close-btn {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,68,68,0.9);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            z-index: 1001;
+            letter-spacing: 1px;
+        }
+
+        .camera-cell.fullscreen .close-btn { display: block; }
+
+        .bottombar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: all 0.3s;
+        }
+
+        .bottombar.visible { opacity: 1; transform: translateY(0); }
+
+        .btn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0,229,255,0.05);
+        }
+
+        .btn.active {
+            border-color: var(--accent2);
+            color: var(--accent2);
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="logo-dot"></div>
+        <div class="site-title">SÜCÜLLÜ KÖYÜ &nbsp;<span>// CANLI KAMERA</span></div>
+    </div>
+    <div class="topbar-right">
+        <span id="camCount">0/9 AKTİF</span>
+        <span id="clock">--:--:--</span>
+    </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="bottombar" id="bottombar">
+    <button class="btn" id="muteBtn">🔇 SES KAPAT</button>
+    <div class="divider"></div>
+    <button class="btn">↺ YENİLE</button>
+    <button class="btn">⛶ TAM EKRAN</button>
+</div>
+
+<script type="module" src="/src/camera/camera-wall.ts"></script>
+</body>
+</html>

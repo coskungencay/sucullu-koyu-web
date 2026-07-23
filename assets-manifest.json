@@ -1,0 +1,517 @@
+{
+  "snapshotDate": "2026-07-23",
+  "sourceSite": "https://www.sucullukoyu.com/",
+  "note": "Tek seferlik forensic snapshot. Orijinal byte korunmustur; yeniden encode/sıkıştırma yapılmamıştır.",
+  "totalFiles": 56,
+  "totalBytes": 27246792,
+  "assets": [
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-01.jpg",
+      "localPath": "public/gorseller/gorsel-01.jpg",
+      "mime": "image/jpeg",
+      "bytes": 438853,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "43b43287942b7716d9c6e0c5a85c61585a34aaec8eb5975728c135ea0d6bba9f"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-02.jpg",
+      "localPath": "public/gorseller/gorsel-02.jpg",
+      "mime": "image/jpeg",
+      "bytes": 335414,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "f2d868df5560f1d0ef8f4139cec152d0c0ecb2fa82f0d44286045822e1a705d8"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-03.jpg",
+      "localPath": "public/gorseller/gorsel-03.jpg",
+      "mime": "image/jpeg",
+      "bytes": 293201,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "9dc021d9058139f7f27e336273014b23ea02845d3406e6c0c97e16d29e408f1f"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-04.jpg",
+      "localPath": "public/gorseller/gorsel-04.jpg",
+      "mime": "image/jpeg",
+      "bytes": 401537,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "c8793d1f992366b2b3c31eabd3d7c64bfdae36f6997ea4a90dc9ef14c20e852f"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-05.jpg",
+      "localPath": "public/gorseller/gorsel-05.jpg",
+      "mime": "image/jpeg",
+      "bytes": 342736,
+      "width": 1600,
+      "height": 1003,
+      "sha256": "8df24d7e9b313fddee9f7a2aece817b3bead8c7163fbec540dbe6f53ef14dcef"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-06.jpg",
+      "localPath": "public/gorseller/gorsel-06.jpg",
+      "mime": "image/jpeg",
+      "bytes": 310777,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "159b30e477767e516671439c632228baf24aa4e66d4a050c00a111b07c9dc51c"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-07.jpg",
+      "localPath": "public/gorseller/gorsel-07.jpg",
+      "mime": "image/jpeg",
+      "bytes": 454503,
+      "width": 1600,
+      "height": 1096,
+      "sha256": "5bad6dd1875ca7a73a609f615ccdc8899d7dca702abd75885045aa1d09b6dcfd"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-08.jpg",
+      "localPath": "public/gorseller/gorsel-08.jpg",
+      "mime": "image/jpeg",
+      "bytes": 257545,
+      "width": 1600,
+      "height": 921,
+      "sha256": "25c11cbf9a16bb18518b292b20f3caa2461f27eead4202c970c2b4a303474e02"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-09.jpg",
+      "localPath": "public/gorseller/gorsel-09.jpg",
+      "mime": "image/jpeg",
+      "bytes": 283526,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "73565f85932b5b56993f227a1befe253d93a9bc179344dd89ae3d59687df9054"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-10.jpg",
+      "localPath": "public/gorseller/gorsel-10.jpg",
+      "mime": "image/jpeg",
+      "bytes": 381811,
+      "width": 1600,
+      "height": 907,
+      "sha256": "acc9a3a634c2ba5b5bd3a757824798de6f5379bbeec3c087c9458d4b17013e19"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-11.jpg",
+      "localPath": "public/gorseller/gorsel-11.jpg",
+      "mime": "image/jpeg",
+      "bytes": 223834,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "ca4632b20c2ec7b311f6c093422bdac2a8c4895f65dfd0d7fa71ff16763703e8"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-12.jpg",
+      "localPath": "public/gorseller/gorsel-12.jpg",
+      "mime": "image/jpeg",
+      "bytes": 275608,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "4de5f7f2672043cc22a29fc6cfbc50af93dcc7423be5825333fc7dab9bcfdb9c"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-13.jpg",
+      "localPath": "public/gorseller/gorsel-13.jpg",
+      "mime": "image/jpeg",
+      "bytes": 263200,
+      "width": 1600,
+      "height": 1073,
+      "sha256": "ff86f30163790fae8279f0e75b5acf1b342d253fb9e83c994e8f8ada6ae394bf"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-14.jpg",
+      "localPath": "public/gorseller/gorsel-14.jpg",
+      "mime": "image/jpeg",
+      "bytes": 194020,
+      "width": 1600,
+      "height": 944,
+      "sha256": "f20afe2730e98bc40e7dc85c3f768b58017e260b19f990b7d368ff2b99ff12ac"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-15.jpg",
+      "localPath": "public/gorseller/gorsel-15.jpg",
+      "mime": "image/jpeg",
+      "bytes": 277438,
+      "width": 1600,
+      "height": 1002,
+      "sha256": "b602ba1a3f9b32d547727fcd2e498537ab29c6643240c1f56197d13fab9ddaad"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-16.jpg",
+      "localPath": "public/gorseller/gorsel-16.jpg",
+      "mime": "image/jpeg",
+      "bytes": 234188,
+      "width": 1600,
+      "height": 961,
+      "sha256": "adc6874f8f331e4ed50afd723578a1361e2e00577c0fa5508bf187dc5e31435f"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-17.jpg",
+      "localPath": "public/gorseller/gorsel-17.jpg",
+      "mime": "image/jpeg",
+      "bytes": 269461,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "9bc82e01a4ef7b6bd41c62745519b0c7b30d6fa1f39ac513509d371378638baf"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-18.jpg",
+      "localPath": "public/gorseller/gorsel-18.jpg",
+      "mime": "image/jpeg",
+      "bytes": 325242,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "734628f406da6d31ceef0fe3b4ccc08444da3f8bea3b5cfbe54016c02905ee59"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-19.jpg",
+      "localPath": "public/gorseller/gorsel-19.jpg",
+      "mime": "image/jpeg",
+      "bytes": 331906,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "d4396157db62961c52772c42cad02c442d69237541f3c52105dd320a96fb70c1"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-20.jpg",
+      "localPath": "public/gorseller/gorsel-20.jpg",
+      "mime": "image/jpeg",
+      "bytes": 392887,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "5c81628b178856d88fb9f847dfc100bc4b073ff1ff75827efe4979cccbe024c7"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-21.jpg",
+      "localPath": "public/gorseller/gorsel-21.jpg",
+      "mime": "image/jpeg",
+      "bytes": 296463,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "13746f30d5572ed2b4d279fcfd94e4f65f48c7e5b5c44011309484fb0e2acf7b"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-22.jpg",
+      "localPath": "public/gorseller/gorsel-22.jpg",
+      "mime": "image/jpeg",
+      "bytes": 385436,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "eeee7aa9584bbf6585800f71a956529af62e8fae4100f53e58eef43d42843bc0"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-23.jpg",
+      "localPath": "public/gorseller/gorsel-23.jpg",
+      "mime": "image/jpeg",
+      "bytes": 340351,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "75e82f1674de9d78362cf0e451716dec5e64a3eb76fac99ddcbb824e5a19ab0e"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-24.jpg",
+      "localPath": "public/gorseller/gorsel-24.jpg",
+      "mime": "image/jpeg",
+      "bytes": 332643,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "24bc63a6191d5b52877bedb901f1a29f7037d1cc32775ce24839c9ee1963af46"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-25.jpg",
+      "localPath": "public/gorseller/gorsel-25.jpg",
+      "mime": "image/jpeg",
+      "bytes": 494296,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "97c1ba2521ec81daa1ee4c31cbf71c074f1713fa4ce917d31122222ff11aa2f7"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-26.jpg",
+      "localPath": "public/gorseller/gorsel-26.jpg",
+      "mime": "image/jpeg",
+      "bytes": 292294,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "5d91f46aa99f6a0f0f37845fc9e49d342154df3a8d90990d320df2fae46d61fe"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-27.jpg",
+      "localPath": "public/gorseller/gorsel-27.jpg",
+      "mime": "image/jpeg",
+      "bytes": 214790,
+      "width": 1600,
+      "height": 1019,
+      "sha256": "08b499aa063f77035c62822c0841251dcc5582addf24148906fef87ed78b1d54"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-28.jpg",
+      "localPath": "public/gorseller/gorsel-28.jpg",
+      "mime": "image/jpeg",
+      "bytes": 283509,
+      "width": 1600,
+      "height": 1007,
+      "sha256": "19e55299d4a1eb47e01e5647176ec89193147775f7a86fac9f3dcf9edfa355ae"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-29.jpg",
+      "localPath": "public/gorseller/gorsel-29.jpg",
+      "mime": "image/jpeg",
+      "bytes": 316385,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "1bc51409d8e6eefd61386e379937a95b80bff1065d588885de9ac6012fc018a0"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-30.jpg",
+      "localPath": "public/gorseller/gorsel-30.jpg",
+      "mime": "image/jpeg",
+      "bytes": 331554,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "ed0b6f8352315275353163dc494935d916a68c028887f0cf064773dbb032619d"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-31.jpg",
+      "localPath": "public/gorseller/gorsel-31.jpg",
+      "mime": "image/jpeg",
+      "bytes": 358640,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "f1f3a83b276505ab6479aba2d24e4ec7bc7733fc31de5c677466587c4db819f4"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-32.jpg",
+      "localPath": "public/gorseller/gorsel-32.jpg",
+      "mime": "image/jpeg",
+      "bytes": 402134,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "e59ed27f9e381c3ed631e604a03a8ff0ad4d6fee983b8c49157f1dec4cba1268"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-33.jpg",
+      "localPath": "public/gorseller/gorsel-33.jpg",
+      "mime": "image/jpeg",
+      "bytes": 280153,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "c40cbd13eeca688628b0e74601da9068cd06e95604f2eda0f392a3528eeeedec"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-34.jpg",
+      "localPath": "public/gorseller/gorsel-34.jpg",
+      "mime": "image/jpeg",
+      "bytes": 304841,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "cd9917ad76f73d64ae460585e5bd215edb4f759597867d221518c4c68826b57c"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-35.jpg",
+      "localPath": "public/gorseller/gorsel-35.jpg",
+      "mime": "image/jpeg",
+      "bytes": 344117,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "8adf876557ced33d5d66057701a900e9494be4f95fb4286a1835507b2003d345"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-36.jpg",
+      "localPath": "public/gorseller/gorsel-36.jpg",
+      "mime": "image/jpeg",
+      "bytes": 231324,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "8553bc65f4c7bb696126eaa971f46434e0576d5cb4b6dbd42f88453e9d1afb22"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-37.jpg",
+      "localPath": "public/gorseller/gorsel-37.jpg",
+      "mime": "image/jpeg",
+      "bytes": 325269,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "3aef64142237699f0a1e6f369fd419d5a202e92e3f797dbf19b095874bf7f6f1"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-38.jpg",
+      "localPath": "public/gorseller/gorsel-38.jpg",
+      "mime": "image/jpeg",
+      "bytes": 258266,
+      "width": 1600,
+      "height": 946,
+      "sha256": "b9aa763f1b272e490a51d3e0871670fde425efaf5432e06f762e9b40510ca0a8"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-39.jpg",
+      "localPath": "public/gorseller/gorsel-39.jpg",
+      "mime": "image/jpeg",
+      "bytes": 308790,
+      "width": 1600,
+      "height": 949,
+      "sha256": "2224de6ba32c27204ff0ebf6bd42387cf8b41125db37d6b1ae1c04be23aae63a"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-40.jpg",
+      "localPath": "public/gorseller/gorsel-40.jpg",
+      "mime": "image/jpeg",
+      "bytes": 411739,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "b161de517af8ca40e578de28a50b582ea580b2f1301dbd48cbf9c83de263d0a3"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-41.jpg",
+      "localPath": "public/gorseller/gorsel-41.jpg",
+      "mime": "image/jpeg",
+      "bytes": 168898,
+      "width": 1600,
+      "height": 992,
+      "sha256": "d5162ade5fb582b069fba94af70c6e29b9f96dd2d77aaaad967f0f28e62aecce"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-42.jpg",
+      "localPath": "public/gorseller/gorsel-42.jpg",
+      "mime": "image/jpeg",
+      "bytes": 323311,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "4dd719b5b1c95b9f1a55079d7d54fb09a38a6574916fb9832eb31be3ed593797"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-43.jpg",
+      "localPath": "public/gorseller/gorsel-43.jpg",
+      "mime": "image/jpeg",
+      "bytes": 288901,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "c819d4bd4d795292e2fa2cf12ebdb381c95c2c240e87504c2f16aaf08a0268e8"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-44.jpg",
+      "localPath": "public/gorseller/gorsel-44.jpg",
+      "mime": "image/jpeg",
+      "bytes": 293177,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "b073055f95f3cd4b0d44b56c2453c89ae333cbf1353a1d24c8a4b9c27f98a94f"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-45.jpg",
+      "localPath": "public/gorseller/gorsel-45.jpg",
+      "mime": "image/jpeg",
+      "bytes": 311537,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "9aec9cead4c609a78de6a6b9e4e3079c729390b1ba2f29eb79136b8aee4240e8"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-46.jpg",
+      "localPath": "public/gorseller/gorsel-46.jpg",
+      "mime": "image/jpeg",
+      "bytes": 356798,
+      "width": 1600,
+      "height": 1015,
+      "sha256": "2b597b86e507705aea8a1b250d796e616e68198208013b283e0850384b584569"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-47.jpg",
+      "localPath": "public/gorseller/gorsel-47.jpg",
+      "mime": "image/jpeg",
+      "bytes": 55873,
+      "width": 768,
+      "height": 576,
+      "sha256": "6195119cd7ef0e19a20b3d8c2acefb49ac5d33c3fae878a2fb54cc8f2bce3223"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-48.jpg",
+      "localPath": "public/gorseller/gorsel-48.jpg",
+      "mime": "image/jpeg",
+      "bytes": 287709,
+      "width": 1600,
+      "height": 1200,
+      "sha256": "74e8982d0e0c8d73137a0d4a4d1647866655e95c3dc2366711d5a8e3aa3d1dcf"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-49.jpg",
+      "localPath": "public/gorseller/gorsel-49.jpg",
+      "mime": "image/jpeg",
+      "bytes": 53027,
+      "width": 768,
+      "height": 576,
+      "sha256": "7e2f9630a723a98844d6b008f560399c08fc0fc4ecb2cda4e125ad905320b2ea"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-50.jpg",
+      "localPath": "public/gorseller/gorsel-50.jpg",
+      "mime": "image/jpeg",
+      "bytes": 47730,
+      "width": 768,
+      "height": 486,
+      "sha256": "8cd2e5812dfe8cfb6e989d4a4770aa0711c30fcf4c91490a84de9a6448673195"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-51.jpg",
+      "localPath": "public/gorseller/gorsel-51.jpg",
+      "mime": "image/jpeg",
+      "bytes": 53027,
+      "width": 768,
+      "height": 576,
+      "sha256": "7e2f9630a723a98844d6b008f560399c08fc0fc4ecb2cda4e125ad905320b2ea"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-52.jpg",
+      "localPath": "public/gorseller/gorsel-52.jpg",
+      "mime": "image/jpeg",
+      "bytes": 55873,
+      "width": 768,
+      "height": 576,
+      "sha256": "6195119cd7ef0e19a20b3d8c2acefb49ac5d33c3fae878a2fb54cc8f2bce3223"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/gorsel-53.jpg",
+      "localPath": "public/gorseller/gorsel-53.jpg",
+      "mime": "image/jpeg",
+      "bytes": 47730,
+      "width": 768,
+      "height": 486,
+      "sha256": "8cd2e5812dfe8cfb6e989d4a4770aa0711c30fcf4c91490a84de9a6448673195"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/hero.jpg",
+      "localPath": "public/gorseller/hero.jpg",
+      "mime": "image/jpeg",
+      "bytes": 47730,
+      "width": 768,
+      "height": 486,
+      "sha256": "8cd2e5812dfe8cfb6e989d4a4770aa0711c30fcf4c91490a84de9a6448673195"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/sucullu-koyu-giris.jpg",
+      "localPath": "public/gorseller/sucullu-koyu-giris.jpg",
+      "mime": "image/jpeg",
+      "bytes": 635673,
+      "width": 941,
+      "height": 1672,
+      "sha256": "2aa7ef5b328c39736912c60f9de79e103898d8c735afee7bdcbbf5b9ce7bb69c"
+    },
+    {
+      "sourceUrl": "https://sucullukoyu.com/gorseller/tanitim-video.mp4",
+      "localPath": "public/gorseller/tanitim-video.mp4",
+      "mime": "video/mp4",
+      "bytes": 11419117,
+      "video": {
+        "width": 848,
+        "height": 480,
+        "codec": "h264",
+        "durationSeconds": 60.650522
+      },
+      "sha256": "3a24b8f131e6768ce111a891cb2974e54803640ecd54693b1dc82c3eac29ae35"
+    }
+  ]
+}

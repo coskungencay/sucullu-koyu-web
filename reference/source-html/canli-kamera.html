@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sücüllü Köyü — Canlı Kamera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg: #080c0f;
+            --panel: #0d1317;
+            --border: #1a2a35;
+            --accent: #00e5ff;
+            --accent2: #00ff88;
+            --warn: #ff4444;
+            --text: #c8d8e0;
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Rajdhani', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent2);
+            box-shadow: 0 0 8px var(--accent2);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent2); }
+            50% { opacity: 0.5; box-shadow: 0 0 18px var(--accent2); }
+        }
+
+        .site-title {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .site-title span { color: var(--accent); }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        #camCount { color: var(--accent); }
+        #clock { color: var(--accent2); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, minmax(0, 1fr));
+            flex: 1;
+            gap: 2px;
+            background: #000;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .camera-cell {
+            position: relative;
+            background: #050a0d;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-cell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            z-index: 5;
+            transition: border-color 0.2s;
+        }
+
+        .camera-cell:hover::after { border-color: var(--accent); }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .camera-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            z-index: 10;
+            border-left: 2px solid var(--accent);
+        }
+
+        .camera-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--mono);
+            font-size: 10px;
+            z-index: 10;
+            background: rgba(0,0,0,0.65);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--warn);
+        }
+
+        .status-dot.live {
+            background: var(--accent2);
+            box-shadow: 0 0 6px var(--accent2);
+            animation: blink 2s infinite;
+        }
+
+        .status-text { color: var(--text); font-size: 10px; }
+        .status-dot.live + .status-text { color: var(--accent2); }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: #050a0d;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            z-index: 8;
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        .camera-cell.fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+        }
+
+        .camera-cell.fullscreen video { object-fit: contain; }
+
+        .close-btn {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,68,68,0.9);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            z-index: 1001;
+            letter-spacing: 1px;
+        }
+
+        .camera-cell.fullscreen .close-btn { display: block; }
+
+        .bottombar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: all 0.3s;
+        }
+
+        .bottombar.visible { opacity: 1; transform: translateY(0); }
+
+        .btn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0,229,255,0.05);
+        }
+
+        .btn.active {
+            border-color: var(--accent2);
+            color: var(--accent2);
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="logo-dot"></div>
+        <div class="site-title">SÜCÜLLÜ KÖYÜ &nbsp;<span>// CANLI KAMERA</span></div>
+    </div>
+    <div class="topbar-right">
+        <span id="camCount">0/9 AKTİF</span>
+        <span id="clock">--:--:--</span>
+    </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="bottombar" id="bottombar">
+    <button class="btn" onclick="muteAll()" id="muteBtn">🔇 SES KAPAT</button>
+    <div class="divider"></div>
+    <button class="btn" onclick="refreshAll()">↺ YENİLE</button>
+    <button class="btn" onclick="toggleFullPage()">⛶ TAM EKRAN</button>
+</div>
+
+<script>
+const TUNNEL = 'https://kameraizle.sucullukoyu.com';
+
+const CAMERAS = [
+    { path: 'kamera1',  name: 'KAMERA 01' },
+    { path: 'kamera2',  name: 'KAMERA 02' },
+    { path: 'kamera6',  name: 'KAMERA 03' },
+    { path: 'kamera5',  name: 'KAMERA 04' },
+    { path: 'kamera7',  name: 'KAMERA 05' },
+    { path: 'kamera8',  name: 'KAMERA 06' },
+    { path: 'kamera10', name: 'KAMERA 07' },
+    { path: 'kamera11', name: 'KAMERA 08' },
+    { path: 'p850',     name: 'KAMERA 09' },
+];
+
+let activeCams = 0;
+let isMuted = true;
+let hlsInstances = [];
+
+function getHlsUrl(path) {
+    return `${TUNNEL}/${path}/index.m3u8`;
+}
+
+function buildGrid() {
+    const grid = document.getElementById('grid');
+    CAMERAS.forEach((cam, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'camera-cell';
+        cell.id = `cell-${i}`;
+        cell.innerHTML = `
+            <div class="loading-overlay" id="loading-${i}">
+                <div class="spinner"></div>
+                <div class="loading-text">BAĞLANIYOR...</div>
+            </div>
+            <video id="video-${i}" muted playsinline autoplay></video>
+            <div class="camera-label">${cam.name}</div>
+            <div class="camera-status">
+                <div class="status-dot" id="dot-${i}"></div>
+                <span class="status-text" id="stxt-${i}">BAĞLANIYOR</span>
+            </div>
+            <button class="close-btn" onclick="event.stopPropagation(); closeFullscreen(${i})">✕ KAPAT</button>
+        `;
+        cell.onclick = () => toggleFullscreen(i);
+        grid.appendChild(cell);
+        initCamera(i, cam.path);
+    });
+}
+
+function initCamera(index, path) {
+    const video = document.getElementById(`video-${index}`);
+    const url = getHlsUrl(path);
+
+    if (Hls.isSupported()) {
+        const hls = new Hls({
+            lowLatencyMode: false,
+            liveSyncDurationCount: 4,
+            liveMaxLatencyDurationCount: 8,
+            maxBufferLength: 20,
+            maxMaxBufferLength: 40,
+            maxBufferSize: 30 * 1000 * 1000,
+            maxBufferHole: 1.0,
+            highBufferWatchdogPeriod: 3,
+            nudgeMaxRetry: 5,
+            nudgeOffset: 0.5,
+            manifestLoadingTimeOut: 15000,
+            manifestLoadingMaxRetry: 6,
+            manifestLoadingRetryDelay: 2000,
+            levelLoadingTimeOut: 15000,
+            levelLoadingMaxRetry: 6,
+            levelLoadingRetryDelay: 2000,
+            fragLoadingTimeOut: 20000,
+            fragLoadingMaxRetry: 6,
+            fragLoadingRetryDelay: 2000,
+            startFragPrefetch: true,
+            testBandwidth: false,
+            enableWorker: true,
+        });
+        hlsInstances[index] = hls;
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.play();
+            setLive(index, true);
+        });
+        hls.on(Hls.Events.ERROR, (e, data) => {
+            if (data.fatal) {
+                setLive(index, false);
+                const delay = data.type === Hls.ErrorTypes.NETWORK_ERROR ? 8000 : 5000;
+                setTimeout(() => { hls.destroy(); initCamera(index, path); }, delay);
+            } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                hls.startLoad();
+            }
+        });
+        // Donma korumasi - 20sn ilerleme olmazsa yeniden baslat
+        let lastTime = 0;
+        let stallCount = 0;
+        setInterval(() => {
+            if (!video.paused && video.currentTime === lastTime) {
+                stallCount++;
+                if (stallCount >= 4) {
+                    stallCount = 0;
+                    hls.destroy();
+                    initCamera(index, path);
+                }
+            } else {
+                stallCount = 0;
+                lastTime = video.currentTime;
+            }
+        }, 5000);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadeddata', () => { video.play(); setLive(index, true); });
+        video.addEventListener('error', () => {
+            setLive(index, false);
+            setTimeout(() => initCamera(index, path), 8000);
+        });
+    }
+}
+
+function setLive(index, live) {
+    const dot = document.getElementById(`dot-${index}`);
+    const stxt = document.getElementById(`stxt-${index}`);
+    const loading = document.getElementById(`loading-${index}`);
+    if (live) {
+        dot.classList.add('live');
+        stxt.textContent = 'CANLI';
+        loading.classList.add('hidden');
+        activeCams++;
+    } else {
+        dot.classList.remove('live');
+        stxt.textContent = 'BAĞLANTI YOK';
+        loading.classList.remove('hidden');
+        activeCams = Math.max(0, activeCams - 1);
+    }
+    document.getElementById('camCount').textContent = `${activeCams}/9 AKTİF`;
+}
+
+function toggleFullscreen(index) {
+    const cell = document.getElementById(`cell-${index}`);
+    const isFs = cell.classList.contains('fullscreen');
+    document.querySelectorAll('.camera-cell.fullscreen').forEach(c => c.classList.remove('fullscreen'));
+    if (!isFs) cell.classList.add('fullscreen');
+}
+
+function closeFullscreen(index) {
+    document.getElementById(`cell-${index}`).classList.remove('fullscreen');
+}
+
+function toggleFullPage() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+}
+
+function muteAll() {
+    isMuted = !isMuted;
+    document.querySelectorAll('video').forEach(v => v.muted = isMuted);
+    const btn = document.getElementById('muteBtn');
+    btn.textContent = isMuted ? '🔇 SES KAPAT' : '🔊 SES AÇ';
+    btn.classList.toggle('active', !isMuted);
+}
+
+function refreshAll() {
+    activeCams = 0;
+    hlsInstances.forEach(h => { if (h) h.destroy(); });
+    hlsInstances = [];
+    document.querySelectorAll('.loading-overlay').forEach(l => l.classList.remove('hidden'));
+    document.querySelectorAll('.status-dot').forEach(d => d.classList.remove('live'));
+    CAMERAS.forEach((cam, i) => initCamera(i, cam.path));
+}
+
+setInterval(() => {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR');
+}, 1000);
+
+let hideTimer;
+const bottombar = document.getElementById('bottombar');
+function showBar() {
+    bottombar.classList.add('visible');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => bottombar.classList.remove('visible'), 3000);
+}
+document.addEventListener('mousemove', showBar);
+document.addEventListener('click', showBar);
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.camera-cell.fullscreen').forEach(c => c.classList.remove('fullscreen'));
+    if (e.key === 'f') toggleFullPage();
+    if (e.key === 'r') refreshAll();
+});
+showBar();
+buildGrid();
+</script>
+</body>
+</html>
