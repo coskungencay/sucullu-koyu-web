@@ -56,7 +56,9 @@ async function freeze(page) {
   await page.addStyleTag({ content: FREEZE_CSS });
 }
 
-const browser = await chromium.launch();
+// Renk profili sabitlenir: farklı makinelerde (CI runner dahil) display
+// profili fotoğraf piksellerini kaydırır; sRGB zorlaması deterministik yapar.
+const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
 
 // ============ ANA SAYFA KAMERA SECTION (1440×900) ============
 {

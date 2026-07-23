@@ -67,7 +67,9 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-const browser = await chromium.launch();
+// Renk profili sabitlenir: farklı makinelerde (CI runner dahil) display
+// profili fotoğraf piksellerini kaydırır; sRGB zorlaması deterministik yapar.
+const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
 for (const vp of VIEWPORTS) {
   const context = await browser.newContext({
     viewport: { width: vp.width, height: vp.height },
