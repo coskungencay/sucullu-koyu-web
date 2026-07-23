@@ -77,7 +77,7 @@ async function openLightboxAt(page, index) {
 
 // Renk profili sabitlenir: farklı makinelerde (CI runner dahil) display
 // profili fotoğraf piksellerini kaydırır; sRGB zorlaması deterministik yapar.
-const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
+const browser = await chromium.launch({ args: ['--force-color-profile=srgb', '--disable-gpu'] });
 for (const vp of VIEWPORTS) {
   const ctx = await browser.newContext({
     viewport: { width: vp.width, height: vp.height },

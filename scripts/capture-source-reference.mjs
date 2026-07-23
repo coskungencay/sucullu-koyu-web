@@ -67,9 +67,10 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-// Renk profili sabitlenir: farklı makinelerde (CI runner dahil) display
-// profili fotoğraf piksellerini kaydırır; sRGB zorlaması deterministik yapar.
-const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
+// Determinizm: sRGB profili + GPU kapalı (SwiftShader). GPU'lu makine ile
+// GPU'suz CI runner'ı fotoğraf küçültmeyi farklı resample eder; yazılım
+// rasterizer'ı her ortamda bit-eşdeğer sonuç verir.
+const browser = await chromium.launch({ args: ['--force-color-profile=srgb', '--disable-gpu'] });
 for (const vp of VIEWPORTS) {
   const context = await browser.newContext({
     viewport: { width: vp.width, height: vp.height },
