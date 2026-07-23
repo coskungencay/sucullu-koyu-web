@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+env:
+  NODE_VERSION: 22.16.0
+
+jobs:
+  quality:
+    name: Kalite kapıları (lint/type/unit/build/E2E)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Unit testler
+        run: npm run test:unit
+
+      - name: Asset bütünlüğü (56/56 SHA-256)
+        run: npm run verify:assets
+
+      - name: Production build
+        run: npm run build
+
+      - name: Playwright Chromium + sistem bağımlılıkları
+        run: npx playwright install --with-deps chromium
+
+      # Video metadata testleri H.264 gerektirir; Playwright Chromium'da codec
+      # yoktur. Branded Chrome kurulur; kurulamazsa CI AÇIKÇA başarısız olur
+      # (video testleri sessizce skip edilmez).
+      - name: Branded Chrome (video H.264 testleri için)
+        run: npx playwright install chrome
+
+      - name: E2E testler (functional)
+        run: npm run test:e2e
+
+      - name: Test raporu (yalnızca başarısızlıkta)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  visual:
+    name: Görsel regresyon (repo golden'larına karşı)
+    # Golden'lar macOS üzerinde üretildi; farklı OS font rasterizer'ı
+    # antialias'ı belgeli eşiklerin ötesine taşıyacağından macOS runner şart.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Preview server
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4173/ >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:4173/ >/dev/null || { echo "preview açılamadı"; exit 1; }
+
+      # Kaynak canlı site CI'da yeniden scrape EDİLMEZ; repodaki onaylı
+      # golden'lar tek referanstır. Eşikler scripts/ci-visual-check.mjs içinde
+      # belgelidir; golden güncelleme ayrı ve bilinçli bir işlemdir.
+      - name: Görsel regresyon kapısı
+        run: node scripts/ci-visual-check.mjs --base http://localhost:4173

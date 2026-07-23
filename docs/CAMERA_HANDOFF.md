@@ -46,16 +46,78 @@ env/config. hls.js 1.4.12 yalnızca live modda dynamic import edilir.
 Mimari: `docs/CAMERA_PLAYER_ARCHITECTURE.md`. Deterministik test modları:
 `?cam=mock-loading | mock-offline | mock-live[&live=0..9]`.
 
-## 4. Gerçek entegrasyon öncesi müşteriden istenecekler (özet)
+## 4. Saha teslim runbook'u (Sprint 4)
 
-Kamera/NVR marka-model ve fiziksel adet; her kameranın doğru adı/sırası
-(ana sayfa–duvar tutarsızlığının çözümü); RTSP/ONVIF, çözünürlük/FPS/codec;
-ses olup olmayacağı; kamera ağına erişen sunucu; `kameraizle` DNS yönetimi;
-tünel/proxy hesabı ve origin portu; upload kapasitesi ve CGNAT; 7/24 beklentisi;
-kayıt; maskeleme gereken alanlar; yayın/mahremiyet bilgilendirmeleri.
-**Gizli bilgiler sohbet/issue/git'e yazılmayacak; güvenli secret handoff kullanılacak.**
+### 4.1 Müşteriden toplanacak bilgi formu
 
-## 5. Yapılmayacaklar (bu sprintlerde)
+| Alan | Örnek/format | Not |
+|---|---|---|
+| Kamera/NVR marka-model | ör. Hikvision DS-xxxx / Dahua NVR | model başına RTSP şablonu değişir |
+| Fiziksel kamera sayısı ve adları | "Köy meydanı", "Okul önü"… | ana sayfa–duvar etiket tutarsızlığının çözüm kararı burada verilecek |
+| RTSP/ONVIF desteği | RTSP URL şablonu, ONVIF portu | credential HARİÇ, şablon olarak |
+| Codec / çözünürlük / FPS | H.264 1080p@15 vb. | H.265 ise transcode gerekir |
+| Ses | var/yok + yayınlanacak mı | mahremiyet etkisi var |
+| Kamera ağına erişen cihaz | mevcut sunucu/PC/NVR | gateway bu makinede koşacak |
+| İnternet upload kapasitesi | Mbps | 9 yayın için ~2-4 Mbps/kamera |
+| CGNAT durumu | var/yok | varsa tünel (ör. cloudflared) zorunlu |
+| `kameraizle` DNS yönetimi | registrar/panel erişimi kimde | şu an NXDOMAIN — kayıt yeniden oluşturulacak |
+| Tünel/proxy hesabı | mevcutsa sağlayıcı + hesap sahibi | eski kurulumun envanteri |
+| Origin servis portu | ör. 8888 | gateway → reverse proxy hedefi |
+| 7/24 beklentisi | evet/hayır | watchdog/restart politikası |
+| Kayıt | canlı-yalnız / kayıtlı | depolama planı |
+| Maskeleme gereken alanlar | özel mülk/pencere vb. | yayın öncesi zorunlu kontrol |
+| Yayın/mahremiyet bilgilendirmesi | tabela/duyuru durumu | müşteri sorumluluğu, kayda geçirilecek |
+
+### 4.2 Teknik kurulum sırası (erişim geldikten sonra)
+
+1. Gateway makinesinde kamera RTSP erişim testi (LAN içi).
+2. RTSP→HLS gateway kurulumu (ör. MediaMTX/ffmpeg tabanlı; credential
+   YALNIZCA gateway config'inde, dosya izinleri 600).
+3. Origin health: `curl -f http://127.0.0.1:<port>/kamera1/index.m3u8`.
+4. Tünel/reverse proxy: `kameraizle.sucullukoyu.com` → origin; DNS kaydının
+   yeniden oluşturulması (şu an NXDOMAIN).
+5. **TLS:** geçerli sertifika zorunlu (Let's Encrypt/tünel sağlayıcısı);
+   clone yalnızca HTTPS base URL kabul eder.
+6. **CORS:** `Access-Control-Allow-Origin` site origin'i ile sınırlandırılmalı
+   (wildcard önerilmez); `GET, HEAD` yeterli.
+7. Dış health kontrolü: `curl -f https://kameraizle.sucullukoyu.com/kamera1/index.m3u8`
+   (200 + geçerli m3u8 içeriği).
+8. Staging'de `VITE_CAMERA_BASE_URL=https://kameraizle.sucullukoyu.com` ile
+   deploy; 9 kameranın `mock` yerine `live` modda doğrulanması.
+9. 24 saat gözlem: reconnect sayıları, stall oranı, bant genişliği.
+
+### 4.3 Credential saklama kuralları
+
+- RTSP kullanıcı adı/parola, kamera IP'si, yönetim portu: YALNIZCA gateway
+  sunucusunda. Git/issue/sohbet/frontend'e asla girmez (bu repo'daki URL
+  doğrulayıcı credential'lı URL'leri zaten reddeder).
+- Secret aktarımı için tek kullanımlık güvenli kanal (ör. parola yöneticisi
+  paylaşımı); e-posta/mesajla düz metin gönderilmez.
+
+### 4.4 Canlıya alma checklist'i
+
+- [ ] Kamera adları/sırası müşteriyle netleşti; `camera-current-map.json` güncellendi
+- [ ] Tüm 9 manifest HTTPS'te 200 + oynatılabilir
+- [ ] CORS yalnızca site origin'ine açık
+- [ ] TLS sertifikası geçerli, otomatik yenileme kurulu
+- [ ] CSP `connect-src/media-src` origin'i doğru
+- [ ] Ses kararı uygulandı (yayında ses varsa varsayılan muted korunur)
+- [ ] Maskeleme/mahremiyet kontrolleri tamam, bilgilendirme yapıldı
+- [ ] Staging'de E2E + görsel doğrulama geçti
+- [ ] 7/24 izleme/watchdog aktif
+- [ ] Rollback: `VITE_CAMERA_BASE_URL` boşaltılırsa site anında güvenli
+      disabled moda döner (yeniden deploy yeterli); gateway sorunları site
+      erişilebilirliğini ETKİLEMEZ
+
+### 4.5 Rollback
+
+Kamera katmanı ile site katmanı ayrıktır: gateway/DNS arızasında yalnızca
+kamera kartları offline görünür, site çalışmaya devam eder. Kamera canlı
+yayınını geri çekmek için env'den base URL kaldırılıp yeniden deploy edilir.
+Coolify'da önceki başarılı deployment'a rollback her zaman mümkündür.
+
+## 5. Yapılmayacaklar (değişmedi)
 
 Gerçek kamera onarımı, `kameraizle` üzerinde servis açma/değiştirme, DNS
-değişikliği, production deploy, credential'ların istemciye gömülmesi.
+değişikliği ve production domain cutover AYRI ONAY gerektirir;
+credential'ların istemciye gömülmesi her koşulda yasaktır.

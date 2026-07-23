@@ -87,6 +87,20 @@ node scripts/capture-camera.mjs --base http://localhost:4173 --out reference/scr
 node scripts/diff-screenshots.mjs --source reference/screenshots/camera/source --clone reference/screenshots/camera/clone --out reference/screenshots/camera/diff
 ```
 
+## Deployment (Sprint 4)
+
+```bash
+docker build -t sucullu-koyu-web .
+docker run -d -p 8090:80 sucullu-koyu-web
+curl http://localhost:8090/healthz   # → ok
+```
+
+Multi-stage Dockerfile (Node 22.16.0 → nginx:1.27-alpine, yalnızca dist/),
+güvenlik başlıkları + CSP, cache politikası ve Coolify yapılandırması:
+`docs/DEPLOYMENT.md`. CI: `.github/workflows/ci.yml` (quality: ubuntu,
+visual: macos — golden'lar macOS kaynaklı). Lighthouse: `docs/LIGHTHOUSE.md`.
+Müşteri onay paketi: `docs/CLIENT_ACCEPTANCE.md`.
+
 ## Dizinler
 
 - `public/gorseller/` — orijinal byte'larıyla dondurulmuş 56 medya dosyası (`assets-manifest.json` ile hashli)
@@ -101,6 +115,6 @@ node scripts/diff-screenshots.mjs --source reference/screenshots/camera/source -
 - ✅ Sprint 1 — Ana sayfa statik parity
 - ✅ Sprint 2 — Galeri 12→53, lightbox, klavye/erişilebilirlik, video testleri
 - ✅ Sprint 3 — Kamera UI parity + state-machine player lifecycle
-- ⏳ Sprint 4 — Hardening (onay bekliyor)
+- ✅ Sprint 4 — Hardening: CI, Docker/nginx, security headers, Lighthouse, runbook
 
 Production deploy, DNS değişikliği ve gerçek kamera entegrasyonu ayrı onay gerektirir.
