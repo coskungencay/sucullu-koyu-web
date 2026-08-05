@@ -1,3 +1,6 @@
 # Kaynak sitenin css/style.css dosyasının birebir portu — görsel parity referansı.
 # Yeniden biçimlendirilmesi yasak (bkz. docs/SOURCE_AUDIT.md §7).
 src/main/main.css
+
+# PowerShell dosyalari Prettier tarafindan parse edilemez
+*.ps1
