@@ -10,7 +10,9 @@
 
 services:
   mediamtx:
-    image: bluenviron/mediamtx:1.20.0
+    build:
+      context: .
+      dockerfile: mediamtx.Dockerfile
     restart: unless-stopped
     environment:
       - SERVICE_FQDN_MEDIAMTX_8888
@@ -22,8 +24,3 @@ services:
       - "8890:8890/udp"
     expose:
       - "8888"
-    volumes:
-      - type: bind
-        source: ./mediamtx.yml
-        target: /mediamtx.yml
-        read_only: true

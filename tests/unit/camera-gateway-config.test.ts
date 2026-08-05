@@ -77,9 +77,12 @@ describe('mediamtx.yml sözleşmesi', () => {
 describe('docker-compose sözleşmesi', () => {
   const compose = read('deploy/camera-gateway/docker-compose.yml');
 
-  it('MediaMTX imajı tam sürüme pinli; latest yasak', () => {
-    expect(compose).toMatch(/image: bluenviron\/mediamtx:\d+\.\d+\.\d+/);
+  it('MediaMTX imajı tam sürüme pinli (Dockerfile); latest yasak', () => {
+    const dockerfile = read('deploy/camera-gateway/mediamtx.Dockerfile');
+    expect(dockerfile).toMatch(/FROM bluenviron\/mediamtx:\d+\.\d+\.\d+/);
+    expect(dockerfile).not.toContain(':latest');
     expect(compose).not.toContain(':latest');
+    expect(dockerfile).toContain('COPY mediamtx.yml /mediamtx.yml');
   });
 
   it('SRT 8890/udp host mapping ve HLS 8888 expose tanımlı', () => {
