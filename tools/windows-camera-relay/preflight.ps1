@@ -31,6 +31,21 @@ $FfmpegSha256 = 'a2c27f95a269f7a1ec8a6c83e911e8a5626c8871a3ed5000a8ed14030dd21d5
 $script:Failures = 0
 $script:Checks = @()
 
+# relay.ps1 ile AYNI kanal eslemesi (tek kaynak: asagidaki tablo relay.ps1'den
+# okunur; parse edilemezse preflight durur — sessiz sapma olmaz).
+$CameraMapPf = [ordered]@{}
+foreach ($m in [regex]::Matches((Get-Content $RelayPs1 -Raw), "'(?<cam>[a-z0-9]+)'\s*=\s*'(?<ch>\d{2})'")) {
+    $CameraMapPf[$m.Groups['cam'].Value] = $m.Groups['ch'].Value
+}
+
+# Native cagri sarmalayicisi (bkz. relay.ps1 Invoke-Native aciklamasi)
+function Invoke-NativePf {
+    param([scriptblock]$Body)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { & $Body } finally { $ErrorActionPreference = $prev }
+}
+
 function Write-Log([string]$line) {
     if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null }
     Add-Content -Path (Join-Path $LogDir 'preflight.log') -Value ("[{0}] {1}" -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $line) -Encoding UTF8
@@ -85,9 +100,12 @@ function Test-TcpPort([string]$targetHost, [int]$port, [int]$timeoutMs = 5000) {
     }
 }
 
+# NOT: Bu fonksiyon Boolean dondurur. PowerShell'de Write-Output ciktisi
+# donus degerine KARISIR (Object[] olusur) — bu yuzden burada yalnizca
+# Write-Host/Write-Log kullanilir; hicbir deger pipeline'a birakilmaz.
 function Install-PinnedFfmpeg {
     if (Test-Path $FfmpegExe) { return $true }
-    Write-Output 'FFmpeg (pinli surum) indiriliyor... bu birkac dakika surebilir.'
+    Write-Host 'FFmpeg (pinli surum) indiriliyor... bu birkac dakika surebilir.'
     $zip = Join-Path $Root 'ffmpeg-pinned.zip'
     $tmp = Join-Path $Root 'ffmpeg-tmp'
     try {
@@ -97,25 +115,27 @@ function Install-PinnedFfmpeg {
         $got = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
         if ($got -ne $FfmpegSha256.ToLower()) {
             Remove-Item -Force $zip
-            Write-Output "HASH UYUSMUYOR (beklenen $FfmpegSha256, bulunan $got) - indirme reddedildi."
+            Write-Host "HASH UYUSMUYOR (beklenen $FfmpegSha256, bulunan $got) - indirme reddedildi."
             return $false
         }
         if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
-        Expand-Archive -Path $zip -DestinationPath $tmp -Force
+        Expand-Archive -Path $zip -DestinationPath $tmp -Force | Out-Null
         $inner = Get-ChildItem $tmp -Directory | Select-Object -First 1
         if (Test-Path $FfmpegDir) { Remove-Item -Recurse -Force $FfmpegDir }
-        Move-Item $inner.FullName $FfmpegDir
+        Move-Item $inner.FullName $FfmpegDir | Out-Null
         Remove-Item -Recurse -Force $tmp
         Remove-Item -Force $zip
         return (Test-Path $FfmpegExe)
     } catch {
-        Write-Output ("FFmpeg indirilemedi: " + $_.Exception.Message)
+        Write-Host ("FFmpeg indirilemedi: " + $_.Exception.Message)
         return $false
     }
 }
 
 if ($EnsureFfmpeg) {
-    if (Install-PinnedFfmpeg) { exit 0 } else { exit 1 }
+    # [bool] cast: fonksiyon tek Boolean dondurse de savunmaci davraniyoruz.
+    $r = Install-PinnedFfmpeg
+    if ([bool]($r | Select-Object -Last 1)) { exit 0 } else { exit 1 }
 }
 
 if (-not $Run) {
@@ -137,6 +157,9 @@ Step 'Windows PowerShell 5.1+ ' ($psv.Major -gt 5 -or ($psv.Major -eq 5 -and $ps
 $required = @('relay.ps1', 'install.cmd', 'uninstall.cmd', 'start.cmd', 'stop.cmd', 'status.cmd', 'config.env.example')
 $missing = @($required | Where-Object { -not (Test-Path (Join-Path $Root $_)) })
 Step 'Paket dosyalari tam' ($missing.Count -eq 0) $(if ($missing.Count) { "eksik: $($missing -join ', ')" } else { "$($required.Count) dosya" })
+
+# 2b) Kanal eslemesi relay.ps1'den okunabildi mi
+Step 'Kanal eslemesi relay.ps1 icinden okundu' ($CameraMapPf.Count -ge 1) "$($CameraMapPf.Count) kamera"
 
 # 3) relay.ps1 sozdizimi (PowerShell parser)
 $parseErrors = $null
@@ -170,12 +193,12 @@ if (-not (Test-Path $ConfigFile)) {
 }
 
 # 5) FFmpeg (pinli + hash dogrulamali)
-$ffOk = Install-PinnedFfmpeg
+$ffOk = [bool]((Install-PinnedFfmpeg) | Select-Object -Last 1)
 Step 'FFmpeg mevcut (pinli surum, SHA-256 dogrulandi)' $ffOk $(if ($ffOk) { 'ffmpeg\bin\ffmpeg.exe' } else { 'indirilemedi/hash uyusmadi' })
 
 # 6) FFmpeg SRT protokol destegi
 if ($ffOk) {
-    $protocols = & $FfmpegExe -hide_banner -protocols 2>&1 | Out-String
+    $protocols = Invoke-NativePf { & $FfmpegExe -hide_banner -protocols 2>&1 | Out-String }
     $srtOk = $protocols -match '(?m)^\s*srt\s*$'
     Step 'FFmpeg SRT protokolu destekli' $srtOk $(if (-not $srtOk) { 'bu build SRT icermiyor' } else { '' })
 } else {
@@ -208,30 +231,57 @@ if ($cfg -and $cfg['SRT_HOST']) {
     }
 }
 
-# 9) Dry-run: YALNIZCA kamera1, foreground, kisa sureli
+# 9) Dry-run: TEK kamera, foreground, kisa sureli.
+# Test kanali: config.env'deki PREFLIGHT_CAMERA; tanimsizsa CameraMap sirasinda
+# ILK ERISILEBILIR kanal secilir (fiziksel olarak kapali kanallar atlanir).
+# Hicbir kanal hardcode edilmez.
 $dryRunOk = $false
 if ($script:Failures -eq 0 -and $cfg) {
     Write-Output ''
-    Write-Output "Dry-run: kamera1 icin $DryRunSeconds saniyelik test yayini (yalnizca okuma)..."
     $u = [uri]::EscapeDataString($cfg['NVR_USER'])
-    $p = [uri]::EscapeDataString($cfg['NVR_PASSWORD'])
-    $rtsp = "rtsp://${u}:${p}@$($cfg['NVR_HOST']):$($cfg['NVR_PORT'])/Preview_01_sub"
+    $pw = [uri]::EscapeDataString($cfg['NVR_PASSWORD'])
+    $rtspFor = { param($ch) "rtsp://${u}:${pw}@$($cfg['NVR_HOST']):$($cfg['NVR_PORT'])/Preview_${ch}_sub" }
+    $probeCodec = {
+        param($url)
+        $raw = Invoke-NativePf { & $FfprobeExe -v error -rtsp_transport tcp -timeout 10000000 -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 $url 2>&1 | Out-String }
+        $c = ($raw -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[a-z0-9]+$' } | Select-Object -First 1)
+        return @{ Codec = $c; Raw = $raw }
+    }
 
-    $codecRaw = & $FfprobeExe -v error -rtsp_transport tcp -rw_timeout 15000000 -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 $rtsp 2>&1 | Out-String
-    $codec = ($codecRaw -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[a-z0-9]+$' } | Select-Object -First 1)
-    if ($codec) {
-        Step "NVR kanal 01 okunabiliyor (codec: $codec)" $true
+    $candidates = @()
+    if ($cfg.ContainsKey('PREFLIGHT_CAMERA') -and $cfg['PREFLIGHT_CAMERA']) {
+        $want = $cfg['PREFLIGHT_CAMERA'].Trim()
+        if ($CameraMapPf.Contains($want)) { $candidates = @($want) }
+        else { Step "PREFLIGHT_CAMERA gecerli degil ($want)" $false 'bilinen kamera adi olmali' }
     } else {
-        Step 'NVR kanal 01 okunabiliyor' $false (Mask ($codecRaw.Trim()) $cfg)
+        $candidates = @($CameraMapPf.Keys)
+    }
+
+    $testCam = $null; $codec = $null; $lastRaw = ''
+    foreach ($cand in $candidates) {
+        Write-Output "Kanal deneniyor: $cand (NVR kanal $($CameraMapPf[$cand]))..."
+        $r = & $probeCodec (& $rtspFor $CameraMapPf[$cand])
+        if ($r.Codec) { $testCam = $cand; $codec = $r.Codec; break }
+        $lastRaw = $r.Raw
     }
 
     if ($codec) {
+        Step "NVR kanali okunabiliyor: $testCam (kanal $($CameraMapPf[$testCam]), codec: $codec)" $true
+    } else {
+        Step 'En az bir NVR kanali okunabiliyor' $false (Mask ($lastRaw.Trim()) $cfg)
+    }
+    $rtsp = if ($testCam) { & $rtspFor $CameraMapPf[$testCam] } else { '' }
+
+    if ($codec) {
+        Write-Output "Dry-run: $testCam icin $DryRunSeconds saniyelik test yayini (yalnizca okuma)..."
         $pp = [uri]::EscapeDataString($cfg['SRT_PASSPHRASE'])
-        $srt = "srt://$($cfg['SRT_HOST']):$($cfg['SRT_PORT'])?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=publish:kamera1"
-        $vArgs = if ($codec -eq 'h264') { @('-c:v', 'copy') } else { @('-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-r', '10', '-g', '20', '-b:v', '700k', '-pix_fmt', 'yuv420p') }
+        $srt = "srt://$($cfg['SRT_HOST']):$($cfg['SRT_PORT'])?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=publish:$testCam"
+        # relay.ps1 ile ayni profil: video-only + yeniden kodlama (saha dogrulamasi)
+        $vArgs = @('-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-r', '10', '-g', '20', '-b:v', '700k', '-pix_fmt', 'yuv420p')
         $errFile = Join-Path $LogDir 'preflight-dryrun.err'
-        $args = @('-hide_banner', '-loglevel', 'error', '-nostats', '-rtsp_transport', 'tcp', '-rw_timeout', '15000000',
-                  '-i', $rtsp, '-map', '0:v:0', '-map', '0:a?') + $vArgs + @('-c:a', 'aac', '-b:a', '64k', '-ac', '1',
+        $args = @('-hide_banner', '-loglevel', 'error', '-nostats', '-rtsp_transport', 'tcp', '-timeout', '15000000',
+                  '-fflags', '+genpts', '-use_wallclock_as_timestamps', '1',
+                  '-i', $rtsp, '-map', '0:v:0', '-an') + $vArgs + @(
                   '-muxdelay', '0.1', '-f', 'mpegts', $srt)
         $proc = Start-Process -FilePath $FfmpegExe -ArgumentList $args -WindowStyle Hidden -PassThru -RedirectStandardError $errFile
         $elapsed = 0
@@ -252,7 +302,7 @@ if ($script:Failures -eq 0 -and $cfg) {
     if ($dryRunOk) {
         Write-Output ''
         Write-Output 'Sunucuda dogrulayin (yayin dry-run sirasinda aciktir):'
-        Write-Output '  https://sucullu-koyu-camera.46.225.123.167.sslip.io/kamera1/index.m3u8  -> 200'
+        Write-Output "  https://sucullu-koyu-camera.46.225.123.167.sslip.io/$testCam/index.m3u8  -> 200"
     }
 } else {
     Write-Output ''
