@@ -8,5 +8,7 @@ docs
 .github
 .env
 .env.*
+# .env.production build-time gateway URL'ini tasir (secret degil) — dahil edilir
+!.env.production
 *.log
 .DS_Store

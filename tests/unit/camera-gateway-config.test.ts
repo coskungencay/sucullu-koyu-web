@@ -249,6 +249,11 @@ describe('build-time kamera env sözleşmesi', () => {
     expect(url.startsWith('https://')).toBe(true);
     expect(url).not.toMatch(/@/); // credential taşımaz
     expect(env).not.toMatch(/passphrase|password|token/i);
+    // .dockerignore .env.* dosyalarını dışlar; bu dosya açıkça geri alınmalı
+    // yoksa build context'e girmez ve site sessizce disabled kalır.
+    const di = read('.dockerignore');
+    expect(di).toContain('!.env.production');
+    expect(di.indexOf('.env.*')).toBeLessThan(di.indexOf('!.env.production'));
   });
 
   it('Dockerfile VITE_CAMERA_BASE_URL build arg olarak geçirir; varsayılan boş', () => {
