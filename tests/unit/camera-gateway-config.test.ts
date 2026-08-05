@@ -264,6 +264,11 @@ describe('build-time kamera env sözleşmesi', () => {
     expect(df).not.toMatch(/ENV\s+VITE_/);
   });
 
+  it('.env.test kamera disabled (E2E determinizmi)', () => {
+    const env = read('.env.test');
+    expect(env).toMatch(/^VITE_CAMERA_BASE_URL=\s*$/m);
+  });
+
   it('build çıktısında gateway URL bulunur (live mod kanıtı)', () => {
     // dist yoksa test atlanır; CI ve lokalde build sonrası anlamlıdır.
     let found = false;

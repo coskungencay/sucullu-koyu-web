@@ -9,7 +9,10 @@ export default defineConfig({
     timezoneId: 'Europe/Istanbul',
   },
   webServer: {
-    command: 'npm run preview -- --port 4173 --strictPort',
+    // E2E'ler kamera disabled build'i kullanır (.env.test): mock modları
+    // deterministik kalır ve testler gerçek gateway'in anlık durumuna
+    // bağımlı olmaz. Production (live) davranışı staging smoke ile doğrulanır.
+    command: 'npm run build:test && npm run preview -- --port 4173 --strictPort',
     port: 4173,
     reuseExistingServer: true,
   },

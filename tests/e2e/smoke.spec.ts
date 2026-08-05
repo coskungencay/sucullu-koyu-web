@@ -136,7 +136,10 @@ test.describe('ana sayfa', () => {
       'KAMERA 10',
       'P850',
     ]);
-    await expect(page.locator('.camera-item .cam-loading').first()).toBeVisible();
+    // Varsayılan (disabled) modda hiçbir kamera isteği yapılmaz; kartlar
+    // kaynak görünümünü korur. NVR'de fiziksel kapalı kameralar (enabled=false)
+    // burada da doğrudan offline gösterilir.
+    await expect(page.locator('.camera-item[data-stream="kamera6"] .cam-loading')).toBeVisible();
     expect(cameraRequests).toEqual([]);
   });
 

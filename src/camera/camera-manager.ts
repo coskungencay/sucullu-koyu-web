@@ -72,6 +72,12 @@ export class CameraManager {
     const index = this.opts.cameras.findIndex((c) => c.id === cameraId);
     if (index < 0) return;
     const camera = this.opts.cameras[index];
+    // mock-live'daki liveCount, ENABLED kameralar arasındaki sıraya göre
+    // uygulanır; aksi halde kapalı kameralar sırayı kaydırıp sezgisiz
+    // sonuç verirdi (?live=3 → 1 canlı gibi).
+    const enabledIndex = this.opts.cameras
+      .filter((c) => c.enabled !== false)
+      .findIndex((c) => c.id === cameraId);
     const video = this.opts.getVideo(cameraId);
     if (!video) return;
 
@@ -89,7 +95,7 @@ export class CameraManager {
       id: camera.id,
       video,
       url: isLive ? buildManifestUrl(this.opts.mode.baseUrl, camera.streamPath) : null,
-      driverFactory: () => this.createDriver(camera, index),
+      driverFactory: () => this.createDriver(camera, enabledIndex),
       scheduler: this.opts.scheduler,
       now: this.opts.now,
       random: this.opts.random,

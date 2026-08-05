@@ -25,24 +25,35 @@ test.describe('ana sayfa kamera preview — mock modları', () => {
     expect(consoleErrors).toEqual([]);
   });
 
-  test('mock-loading: spinner kalıcı görünür', async ({ page }) => {
+  test('mock-loading: aktif kamerada spinner kalıcı görünür', async ({ page }) => {
     await page.goto('/?cam=mock-loading');
     await page.locator('#canli-kamera').scrollIntoViewIfNeeded();
     await page.waitForTimeout(1000);
-    await expect(page.locator('.camera-item .cam-loading').first()).toBeVisible();
-    await expect(page.locator('.camera-item .cam-offline').first()).toBeHidden();
+    // NVR'de fiziksel kapalı kameralar (enabled=false) doğrudan offline olur;
+    // spinner yalnızca aktif kameralarda beklenir.
+    const aktif = page.locator('.camera-item[data-stream="kamera6"]');
+    await expect(aktif.locator('.cam-loading')).toBeVisible();
+    await expect(aktif.locator('.cam-offline')).toBeHidden();
   });
 
-  test('mock-live: CANLI tam opak, spinner gizli', async ({ page }) => {
+  test('mock-live: aktif kamerada CANLI tam opak, spinner gizli', async ({ page }) => {
     await page.goto('/?cam=mock-live');
     await page.locator('#canli-kamera').scrollIntoViewIfNeeded();
     await page.waitForTimeout(1200);
-    const liveOpacity = await page
-      .locator('.camera-item .cam-live')
-      .first()
-      .evaluate((el) => el.style.opacity);
+    const aktif = page.locator('.camera-item[data-stream="kamera6"]');
+    const liveOpacity = await aktif.locator('.cam-live').evaluate((el) => el.style.opacity);
     expect(liveOpacity).toBe('1');
-    await expect(page.locator('.camera-item .cam-loading').first()).toBeHidden();
+    await expect(aktif.locator('.cam-loading')).toBeHidden();
+  });
+
+  test('fiziksel kapalı kamera hiç istek yapmaz, doğrudan offline', async ({ page }) => {
+    await page.goto('/?cam=mock-live');
+    await page.locator('#canli-kamera').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
+    for (const p of ['kamera1', 'kamera2', 'kamera11']) {
+      const kapali = page.locator(`.camera-item[data-stream="${p}"]`);
+      await expect(kapali.locator('.cam-offline'), p).toBeVisible();
+    }
   });
 
   test('IntersectionObserver: kamera bölümüne yaklaşmadan init yapılmaz', async ({ page }) => {
@@ -52,13 +63,13 @@ test.describe('ana sayfa kamera preview — mock modları', () => {
     await page.locator('#canli-kamera').scrollIntoViewIfNeeded();
     await page.waitForTimeout(800);
     expect(await page.locator('.camera-item[data-cam-init="true"]').count()).toBe(9);
-    // kart başına tek init: driversCreated 9 kalmalı
+    // kart başına tek init; driver yalnızca ENABLED kameralar için (6)
     const created = await page.evaluate(
       () =>
         (window as unknown as { __cameraDebug?: { driversCreated: number } }).__cameraDebug
           ?.driversCreated,
     );
-    expect(created).toBe(9);
+    expect(created).toBe(6);
   });
 
   test('tam ekran linkleri /canli-kamera.html rotasına yeni sekmede gider', async ({ page }) => {
@@ -94,22 +105,21 @@ test.describe('kamera duvarı — deterministik sayaç', () => {
     expect(consoleErrors).toEqual([]);
   });
 
-  test('mock-live&live=3 → 3/9 AKTİF; ilk üç hücre CANLI', async ({ page }) => {
+  test('mock-live&live=3 → 3/9 AKTİF (ilk üç AKTİF kamera)', async ({ page }) => {
     await page.goto('/canli-kamera.html?cam=mock-live&live=3');
     await page.waitForTimeout(800);
     await expect(page.locator('#camCount')).toHaveText('3/9 AKTİF');
-    const texts = await page.$$eval('.status-text', (els) => els.map((e) => e.textContent));
-    expect(texts.slice(0, 3)).toEqual(['CANLI', 'CANLI', 'CANLI']);
-    expect(texts.slice(3).every((t) => t === 'BAĞLANTI YOK')).toBe(true);
+    expect(await page.locator('.status-dot.live').count()).toBe(3);
   });
 
-  test('mock-live → 9/9 AKTİF; loading overlay gizli', async ({ page }) => {
+  test('mock-live → 6/9 AKTİF (NVR’de kapalı 3 kanal hariç)', async ({ page }) => {
     await page.goto('/canli-kamera.html?cam=mock-live');
     await page.waitForTimeout(800);
-    await expect(page.locator('#camCount')).toHaveText('9/9 AKTİF');
-    await expect(page.locator('.loading-overlay.hidden')).toHaveCount(9);
-    const dots = await page.locator('.status-dot.live').count();
-    expect(dots).toBe(9);
+    await expect(page.locator('#camCount')).toHaveText('6/9 AKTİF');
+    expect(await page.locator('.status-dot.live').count()).toBe(6);
+    // kapalı kanallar kontrollü offline
+    const texts = await page.$$eval('.status-text', (els) => els.map((e) => e.textContent));
+    expect(texts.filter((t) => t === 'BAĞLANTI YOK')).toHaveLength(3);
   });
 });
 
@@ -121,6 +131,7 @@ test.describe('kamera duvarı — tek hücre büyütme', () => {
     await page.waitForTimeout(600);
     const cell0 = page.locator('#cell-0');
     const cell1 = page.locator('#cell-1');
+    // NOT: hücre büyütme yayın durumundan bağımsızdır (kapalı kanalda da çalışır)
 
     await cell0.click();
     await expect(cell0).toHaveClass(/fullscreen/);
@@ -131,7 +142,7 @@ test.describe('kamera duvarı — tek hücre büyütme', () => {
         (window as unknown as { __cameraDebug: { driversCreated: number } }).__cameraDebug
           .driversCreated,
     );
-    expect(createdBefore).toBe(9);
+    expect(createdBefore).toBe(6);
 
     await cell0.locator('.close-btn').click();
     await expect(cell0).not.toHaveClass(/fullscreen/);
@@ -184,17 +195,17 @@ test.describe('kamera duvarı — ses/yenile/tam ekran/klavye', () => {
   test('yenile: 9/9 → yeniden bağlanır; hızlı spam instance çoğaltmaz', async ({ page }) => {
     await page.goto('/canli-kamera.html?cam=mock-live');
     await page.waitForTimeout(800);
-    await expect(page.locator('#camCount')).toHaveText('9/9 AKTİF');
+    await expect(page.locator('#camCount')).toHaveText('6/9 AKTİF');
     const refresh = page.getByRole('button', { name: /YENİLE/ });
     for (let i = 0; i < 5; i++) await refresh.click({ delay: 30 });
     await page.waitForTimeout(900);
-    await expect(page.locator('#camCount')).toHaveText('9/9 AKTİF');
+    await expect(page.locator('#camCount')).toHaveText('6/9 AKTİF');
     const debug = await page.evaluate(
       () =>
         (window as unknown as { __cameraDebug: { driversAlive: number; driversCreated: number } })
           .__cameraDebug,
     );
-    expect(debug.driversAlive).toBe(9);
+    expect(debug.driversAlive).toBe(6);
     expect(await page.locator('video').count()).toBe(9);
   });
 
@@ -207,10 +218,10 @@ test.describe('kamera duvarı — ses/yenile/tam ekran/klavye', () => {
           (window as unknown as { __cameraDebug: { driversCreated: number } }).__cameraDebug
             .driversCreated,
       );
-    expect(await created()).toBe(9);
+    expect(await created()).toBe(6);
     await page.keyboard.press('r');
     await page.waitForTimeout(400);
-    expect(await created()).toBe(18);
+    expect(await created()).toBe(12);
 
     // editable element focus'undayken r çalışmamalı
     await page.evaluate(() => {
@@ -221,14 +232,14 @@ test.describe('kamera duvarı — ses/yenile/tam ekran/klavye', () => {
     });
     await page.keyboard.press('r');
     await page.waitForTimeout(300);
-    expect(await created()).toBe(18);
+    expect(await created()).toBe(12);
     // Ctrl+R kombinasyonu da shortcut tetiklememeli (guard testi için evaluate ile)
     await page.evaluate(() => {
       document.getElementById('test-input')?.remove();
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', ctrlKey: true }));
     });
     await page.waitForTimeout(300);
-    expect(await created()).toBe(18);
+    expect(await created()).toBe(12);
   });
 
   test('f kısayolu ve TAM EKRAN butonu Fullscreen API çağırır (stub)', async ({ page }) => {

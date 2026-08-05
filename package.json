@@ -14,7 +14,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "manifest": "node scripts/build-asset-manifest.mjs",
-    "verify:assets": "node scripts/verify-assets.mjs"
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "build:test": "tsc --noEmit && vite build --mode test"
   },
   "dependencies": {
     "hls.js": "1.4.12"
