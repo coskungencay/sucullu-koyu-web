@@ -227,8 +227,7 @@ if ($script:Failures -eq 0 -and $cfg) {
 
     if ($codec) {
         $pp = [uri]::EscapeDataString($cfg['SRT_PASSPHRASE'])
-        $sid = [uri]::EscapeDataString('#!::m=publish,r=kamera1')
-        $srt = "srt://$($cfg['SRT_HOST']):$($cfg['SRT_PORT'])?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=${sid}"
+        $srt = "srt://$($cfg['SRT_HOST']):$($cfg['SRT_PORT'])?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=publish:kamera1"
         $vArgs = if ($codec -eq 'h264') { @('-c:v', 'copy') } else { @('-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-r', '10', '-g', '20', '-b:v', '700k', '-pix_fmt', 'yuv420p') }
         $errFile = Join-Path $LogDir 'preflight-dryrun.err'
         $args = @('-hide_banner', '-loglevel', 'error', '-nostats', '-rtsp_transport', 'tcp', '-rw_timeout', '15000000',

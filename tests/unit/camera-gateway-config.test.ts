@@ -124,10 +124,13 @@ describe('windows relay sözleşmesi', () => {
     expect(ps1).toContain('Mask-Secrets');
   });
 
-  it('SRT çıkışı MediaMTX streamid sözleşmesinde (#!::m=publish,r=<path>)', () => {
-    expect(ps1).toContain('EscapeDataString("#!::m=publish,r=$cam")');
-    expect(ps1).toContain('passphrase=${pp}&streamid=${sid}');
+  it('SRT çıkışı MediaMTX streamid sözleşmesinde (publish:<path>)', () => {
+    // Sunucu logu ile doğrulandı: "stream ID must be 'action:pathname[:query]'"
+    expect(ps1).toContain('streamid=publish:${cam}');
+    expect(ps1).not.toContain('#!::m=publish');
     expect(ps1).toContain("'-f', 'mpegts'");
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    expect(pf).toContain('streamid=publish:kamera1');
   });
 
   it('preflight mutasyonsuz: servis/task/registry/firewall değiştirmez', () => {

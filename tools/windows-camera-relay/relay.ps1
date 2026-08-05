@@ -89,9 +89,10 @@ function Get-RtspUrl([hashtable]$cfg, [string]$channel) {
 
 function Get-SrtUrl([hashtable]$cfg, [string]$cam) {
     $pp = [uri]::EscapeDataString($cfg.SRT_PASSPHRASE)
-    # MediaMTX SRT streamid sozlesmesi: #!::m=publish,r=<path>  (URL-encoded)
-    $sid = [uri]::EscapeDataString("#!::m=publish,r=$cam")
-    return "srt://$($cfg.SRT_HOST):$($cfg.SRT_PORT)?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=${sid}"
+    # MediaMTX SRT streamid sozlesmesi: 'action:pathname'
+    # (sunucu logundan dogrulandi; FFmpeg streamid'yi URL-decode ETMEZ,
+    # bu yuzden encode edilmemis halde gonderilir).
+    return "srt://$($cfg.SRT_HOST):$($cfg.SRT_PORT)?mode=caller&latency=2000&pkt_size=1316&passphrase=${pp}&streamid=publish:${cam}"
 }
 
 function Detect-Codec([hashtable]$cfg, [string]$cam, [string]$rtspUrl) {

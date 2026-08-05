@@ -64,11 +64,9 @@ SRT_PASSPHRASE=0123456789abcdef
 
     $srt = Get-SrtUrl $cfg 'kamera1'
     Assert 'SRT caller modu + latency' ($srt -like '*mode=caller*' -and $srt -like '*latency=2000*')
-    # Escape detayina degil, DECODE edilmis degere bakilir:
-    # .NET EscapeDataString '!' karakterini escape etmez, '%21' de gecerlidir.
+    # MediaMTX sozlesmesi: 'publish:<path>' (sunucu logu ile dogrulandi)
     $sidEncoded = if ($srt -match 'streamid=([^&]+)') { $Matches[1] } else { '' }
-    $sidDecoded = [uri]::UnescapeDataString($sidEncoded)
-    Assert 'SRT streamid MediaMTX sozlesmesi (decode edilmis)' ($sidDecoded -eq '#!::m=publish,r=kamera1') "bulunan: $sidDecoded"
+    Assert 'SRT streamid MediaMTX sozlesmesi' ($sidEncoded -eq 'publish:kamera1') "bulunan: $sidEncoded"
     Assert 'streamid ham bosluk/ayirici icermez' ($sidEncoded -notmatch '[\s&]')
     Assert 'SRT passphrase parametresi var' ($srt -like '*passphrase=*')
 
