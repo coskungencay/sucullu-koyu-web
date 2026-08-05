@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { cameras } from '../../src/camera/camera-config';
@@ -256,12 +256,29 @@ describe('build-time kamera env sözleşmesi', () => {
     expect(di.indexOf('.env.*')).toBeLessThan(di.indexOf('!.env.production'));
   });
 
-  it('Dockerfile VITE_CAMERA_BASE_URL build arg olarak geçirir; varsayılan boş', () => {
+  it('Dockerfile boş VITE_* ENV tanımlamaz (dosya değerini ezerdi)', () => {
     const df = read('Dockerfile');
-    expect(df).toContain('ARG VITE_CAMERA_BASE_URL=""');
-    expect(df).toContain('ENV VITE_CAMERA_BASE_URL=$VITE_CAMERA_BASE_URL');
-    // build adımı ARG tanımından SONRA gelmeli, yoksa değer bundle'a girmez
-    expect(df.indexOf('ARG VITE_CAMERA_BASE_URL')).toBeLessThan(df.indexOf('npm run build'));
+    // Vite: process env > .env.production. Boş varsayılanlı ENV/ARG, gateway
+    // URL'ini sessizce siler ve site disabled kalır.
+    expect(df).not.toMatch(/ARG\s+VITE_/);
+    expect(df).not.toMatch(/ENV\s+VITE_/);
+  });
+
+  it('build çıktısında gateway URL bulunur (live mod kanıtı)', () => {
+    // dist yoksa test atlanır; CI ve lokalde build sonrası anlamlıdır.
+    let found = false;
+    try {
+      const dir = join(ROOT, 'dist', 'assets');
+      for (const f of readdirSync(dir)) {
+        if (f.endsWith('.js') && read(`dist/assets/${f}`).includes('sucullu-koyu-camera')) {
+          found = true;
+          break;
+        }
+      }
+    } catch {
+      return; // dist yok
+    }
+    expect(found, 'dist bundle içinde gateway URL bulunmalı').toBe(true);
   });
 });
 

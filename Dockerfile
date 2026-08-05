@@ -4,10 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-# Kamera gateway adresi BUILD-TIME degiskenidir (Vite import.meta.env).
-# Bos birakilirsa site guvenli 'disabled' modda kalir (sifir kamera istegi).
-ARG VITE_CAMERA_BASE_URL=""
-ENV VITE_CAMERA_BASE_URL=$VITE_CAMERA_BASE_URL
+# NOT: Burada VITE_* icin ARG/ENV TANIMLANMAZ. Vite'in oncelik sirasinda
+# process env, .env.production dosyasini EZER; bos varsayilanli bir ENV
+# gateway URL'ini sessizce siler ve site disabled modda kalir (yasandi).
+# Kamera gateway adresinin tek kaynagi .env.production dosyasidir.
 # Asset bütünlüğü build'in ön koşuludur (56/56 SHA-256)
 RUN node scripts/verify-assets.mjs && npm run build
 
