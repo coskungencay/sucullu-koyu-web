@@ -21,8 +21,15 @@ Windows relay köy bilgisayarında **kurulu ve çalışıyor**. NVR'de şu anda
 | ✅ Aktif (6) | `kamera6` `kamera5` `kamera7` `kamera8` `kamera10` `p850` |
 | ⛔ NVR'de kapalı (3) | `kamera1` `kamera2` `kamera11` |
 
-Çevrimdışı kanallar sitede **kontrollü offline** görünür (görüntü çoğaltılmaz,
-sahte "canlı" gösterilmez). Aktif sayaç gerçek player state'inden türetilir.
+Çevrimdışı kanallar `src/camera/camera-current-map.json` içinde
+**`enabled: false`** işaretlidir: bu kameralar için hiçbir yayın isteği
+yapılmaz, UI doğrudan kontrollü offline gösterir (görüntü çoğaltılmaz, sahte
+"canlı" gösterilmez, gereksiz retry/404 gürültüsü olmaz). Aktif sayaç gerçek
+player state'inden türetilir.
+
+**Kanal geri geldiğinde:** ilgili kameranın `enabled` değerini `true` yapıp
+siteyi yeniden deploy etmek yeterlidir (relay tarafında değişiklik gerekmez —
+9 kanalın hepsi zaten relay'de tanımlı).
 
 Yayın profili (saha doğrulaması): H.264, 896×512, 10 FPS, ~700 kbps,
 **video-only** (ses NVR tarafında non-monotonic DTS ürettiği için kapalı).
@@ -90,12 +97,19 @@ Relay bağlanıp 9/9 manifest 200 dönmeden siteyi live moda ALMAYIN
 
 1. Doğrula: `curl -sI https://sucullu-koyu-camera.46.225.123.167.sslip.io/kamera1/index.m3u8` → 200.
 2. Coolify → **sucullu-koyu-web** uygulaması → Environment:
-   `VITE_CAMERA_BASE_URL=https://sucullu-koyu-camera.46.225.123.167.sslip.io`
-   (**Build Variable** olarak işaretle — Vite build-time değişkenidir).
-3. Redeploy. Site kartları ve kamera duvarı otomatik live moda geçer
-   (frontend'de kod değişikliği yok; mode çözümü env'den).
+   Gateway adresi **`.env.production`** dosyasındadır (repoda, secret değil).
+   Coolify API'si bu sürümde env'i "Build Variable" olarak işaretlemeye izin
+   vermediği için (`is_build_time` reddediliyor) tek kaynak bu dosyadır.
+3. Redeploy. Site kartları ve kamera duvarı otomatik live moda geçer.
 
-Geri almak için: değişkeni silin + redeploy → site anında güvenli disabled moda döner.
+**İki tuzak (yaşandı, testle korunuyor):**
+- `.dockerignore` içindeki `.env.*` kuralı dosyayı build context'inden
+  çıkarır → `!.env.production` istisnası zorunlu.
+- Dockerfile'da **boş varsayılanlı `ENV VITE_*` tanımlamayın**: Vite'ın
+  önceliğinde process env dosyayı ezer, site sessizce disabled kalır.
+
+Geri almak için: `.env.production` içindeki değeri boşaltıp redeploy → site
+güvenli disabled moda döner.
 
 ## 4.5. Relay davranış ayarları (config.env — opsiyonel)
 

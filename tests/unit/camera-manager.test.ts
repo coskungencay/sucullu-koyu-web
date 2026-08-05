@@ -13,7 +13,9 @@ function setup(
   } = {},
 ) {
   const fake = createFakeScheduler();
-  const wall = byWallOrder(cameras);
+  // Manager mantığı testleri saha durumundan bağımsızdır: tüm kameralar
+  // enabled kabul edilir. enabled=false davranışı ayrı blokta test edilir.
+  const wall = byWallOrder(cameras).map((c) => ({ ...c, enabled: true }));
   const videos = new Map<string, HTMLVideoElement>();
   for (const cam of wall) {
     const v = document.createElement('video');
@@ -118,6 +120,28 @@ describe('deterministik senaryolar ve aktif sayaç', () => {
     // backoff (3000+jitter) + yeni driver playing (200)
     await settle(fake, 4200);
     expect(manager.activeCount).toBe(9);
+  });
+});
+
+describe('fiziksel kapalı kamera (enabled=false)', () => {
+  it('player/driver oluşturulmaz, doğrudan offline bildirilir', async () => {
+    const { manager, fake, wall } = setup({ mode: 'mock-live', liveCount: 9 });
+    const target = wall[0];
+    target.enabled = false;
+    manager.startCamera(target.id);
+    await settle(fake);
+    expect(manager.debug.driversCreated).toBe(0);
+    expect(manager.getState(target.id)).toBeNull();
+  });
+
+  it('startAll: yalnızca enabled kameralar için driver oluşur', async () => {
+    const { manager, fake, wall } = setup({ mode: 'mock-live', liveCount: 9 });
+    wall[0].enabled = false;
+    wall[4].enabled = false;
+    manager.startAll();
+    await settle(fake);
+    expect(manager.debug.driversCreated).toBe(7);
+    expect(manager.activeCount).toBe(7);
   });
 });
 

@@ -17,7 +17,8 @@
       "homeOrder": 1,
       "homeLabel": "KAMERA 01",
       "wallOrder": 1,
-      "wallLabel": "KAMERA 01"
+      "wallLabel": "KAMERA 01",
+      "enabled": false
     },
     {
       "id": "camera-02",
@@ -25,7 +26,8 @@
       "homeOrder": 2,
       "homeLabel": "KAMERA 02",
       "wallOrder": 2,
-      "wallLabel": "KAMERA 02"
+      "wallLabel": "KAMERA 02",
+      "enabled": false
     },
     {
       "id": "camera-06",
@@ -33,7 +35,8 @@
       "homeOrder": 3,
       "homeLabel": "KAMERA 04",
       "wallOrder": 3,
-      "wallLabel": "KAMERA 03"
+      "wallLabel": "KAMERA 03",
+      "enabled": true
     },
     {
       "id": "camera-05",
@@ -41,7 +44,8 @@
       "homeOrder": 4,
       "homeLabel": "KAMERA 05",
       "wallOrder": 4,
-      "wallLabel": "KAMERA 04"
+      "wallLabel": "KAMERA 04",
+      "enabled": true
     },
     {
       "id": "camera-07",
@@ -49,7 +53,8 @@
       "homeOrder": 5,
       "homeLabel": "KAMERA 07",
       "wallOrder": 5,
-      "wallLabel": "KAMERA 05"
+      "wallLabel": "KAMERA 05",
+      "enabled": true
     },
     {
       "id": "camera-08",
@@ -57,7 +62,8 @@
       "homeOrder": 6,
       "homeLabel": "KAMERA 08",
       "wallOrder": 6,
-      "wallLabel": "KAMERA 06"
+      "wallLabel": "KAMERA 06",
+      "enabled": true
     },
     {
       "id": "camera-11",
@@ -65,7 +71,8 @@
       "homeOrder": 7,
       "homeLabel": "KAMERA 11",
       "wallOrder": 8,
-      "wallLabel": "KAMERA 08"
+      "wallLabel": "KAMERA 08",
+      "enabled": false
     },
     {
       "id": "camera-10",
@@ -73,7 +80,8 @@
       "homeOrder": 8,
       "homeLabel": "KAMERA 10",
       "wallOrder": 7,
-      "wallLabel": "KAMERA 07"
+      "wallLabel": "KAMERA 07",
+      "enabled": true
     },
     {
       "id": "camera-p850",
@@ -81,7 +89,9 @@
       "homeOrder": 9,
       "homeLabel": "P850",
       "wallOrder": 9,
-      "wallLabel": "KAMERA 09"
+      "wallLabel": "KAMERA 09",
+      "enabled": true
     }
-  ]
+  ],
+  "note": "enabled=false: kamera NVR tarafinda fiziksel olarak kapali. Bu kameralar icin hicbir yayin istegi yapilmaz; UI kontrollu offline gosterir. Kanal geri gelince true yapip yeniden deploy etmek yeterlidir."
 }

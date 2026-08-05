@@ -75,6 +75,14 @@ export class CameraManager {
     const video = this.opts.getVideo(cameraId);
     if (!video) return;
 
+    // Fiziksel olarak kapalı kamera: player oluşturulmaz, ağ isteği yapılmaz.
+    // UI doğrudan kontrollü offline gösterir (retry/404 gürültüsü olmaz).
+    if (camera.enabled === false) {
+      this.opts.onPlayerState?.(camera.id, { status: 'offline', reason: 'disabled' });
+      this.opts.onActiveCount?.(this.activeCount);
+      return;
+    }
+
     video.muted = this.mutedState;
     const isLive = this.opts.mode.mode === 'live';
     const player = new CameraPlayer({

@@ -282,6 +282,23 @@ describe('build-time kamera env sözleşmesi', () => {
   });
 });
 
+describe('fiziksel kapalı kamera sözleşmesi', () => {
+  it('NVR’de kapalı 3 kanal enabled=false, aktif 6 kanal enabled=true', () => {
+    const map = JSON.parse(read('src/camera/camera-current-map.json'));
+    const byPath = Object.fromEntries(
+      map.cameras.map((c: { streamPath: string; enabled: boolean }) => [c.streamPath, c.enabled]),
+    );
+    for (const p of ['kamera1', 'kamera2', 'kamera11']) expect(byPath[p], p).toBe(false);
+    for (const p of ['kamera6', 'kamera5', 'kamera7', 'kamera8', 'kamera10', 'p850'])
+      expect(byPath[p], p).toBe(true);
+  });
+
+  it('9 kart korunur; sadece 6 tanesi yayın adayı', () => {
+    expect(cameras).toHaveLength(9);
+    expect(cameras.filter((c) => c.enabled)).toHaveLength(6);
+  });
+});
+
 describe('frontend sözleşmesi değişmedi', () => {
   it('URL kalıbı {base}/{streamPath}/index.m3u8 ve 9 kamera korunuyor', () => {
     expect(cameras).toHaveLength(9);

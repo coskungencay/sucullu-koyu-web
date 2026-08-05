@@ -6,7 +6,12 @@ import cameraMap from './camera-current-map.json';
  * Ana sayfa ve kamera duvarı etiket/sıra farklılıkları kaynaktaki doğrulanmış
  * tutarsızlıktır ve müşteri onayına kadar bilinçli olarak korunur.
  */
-export const cameras: CameraConfig[] = cameraMap.cameras.map((c) => ({ ...c, enabled: true }));
+export const cameras: CameraConfig[] = cameraMap.cameras.map((c) => ({
+  ...c,
+  // enabled=false: kamera NVR'de fiziksel olarak kapalı → hiç istek yapılmaz.
+  // Alan yoksa geriye dönük uyumluluk için true.
+  enabled: (c as { enabled?: boolean }).enabled ?? true,
+}));
 
 /** Ham env değeri; doğrulama camera-url.ts / camera-mode.ts'dedir. */
 export function getCameraBaseUrlRaw(
