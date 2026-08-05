@@ -93,6 +93,44 @@ Geri almak için: değişkeni silin + redeploy → site anında güvenli disable
 - **Coolify API token:** yalnızca yönetim işlemleri içindir; runtime'da
   kullanılmaz. Panelden rotate edilebilir.
 
+## 6.5. UDP 8890 erişimi (kurulum öncesi ZORUNLU kontrol)
+
+SRT ingest UDP'dir; Coolify'ın HTTP proxy'si UDP taşımaz, bu yüzden host port
+mapping (`8890:8890/udp`) ve sunucu/bulut firewall'ı açık olmalıdır.
+**05.08.2026 doğrulaması: dışarıdan gönderilen SRT handshake'leri MediaMTX'e
+ulaşmıyor; container logunda hiç bağlantı denemesi görünmüyor** → UDP yolu
+kapalı. Sunucuda (SSH ile) şu kontroller yapılmalı:
+
+```bash
+# 1) Port publish edilmiş mi? (0.0.0.0:8890->8890/udp görünmeli)
+docker ps --filter name=mediamtx --format '{{.Names}} {{.Ports}}'
+
+# 2) Host firewall
+ufw status | grep 8890            # ufw kullanılıyorsa
+iptables -L INPUT -n | grep 8890  # ham iptables
+
+# 3) Gerekirse yalnızca bu port için minimal kural
+ufw allow 8890/udp comment 'MediaMTX SRT ingest'
+
+# 4) Sunucuda dinleniyor mu
+ss -ulnp | grep 8890
+```
+
+Ayrıca hosting sağlayıcısının **bulut firewall panelinde** UDP 8890 inbound
+izni gerekebilir (host içi kurallardan bağımsızdır).
+
+Doğrulama testi (herhangi bir makineden, SRT destekli ffmpeg ile):
+
+```bash
+ffmpeg -re -f lavfi -i testsrc2=size=896x512:rate=10 -c:v libx264 -preset veryfast \
+  -g 20 -b:v 400k -pix_fmt yuv420p -an -t 20 -f mpegts \
+  "srt://46.225.123.167:8890?mode=caller&latency=2000&pkt_size=1316&passphrase=<PASSPHRASE>&streamid=%23%21%3A%3Am%3Dpublish%2Cr%3Dkamera1"
+# Ardından: curl -sI https://sucullu-koyu-camera.46.225.123.167.sslip.io/kamera1/index.m3u8  → 200
+```
+
+> SRT streamid sözleşmesi: `#!::m=publish,r=<path>` (URL-encoded). Windows
+> relay bunu otomatik üretir.
+
 ## 7. Sorun giderme
 
 | Belirti | Kontrol |
