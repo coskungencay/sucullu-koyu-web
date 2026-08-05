@@ -1,57 +1,52 @@
 @echo off
 setlocal EnableExtensions
 rem Sucullu Koyu kamera relay kurulumu — "Yonetici olarak calistir" gerekir.
+rem   install.cmd            normal kurulum
+rem   install.cmd /dryrun    hicbir sey degistirmeden dogrulama (CI icin)
 cd /d "%~dp0"
 
-net session >nul 2>&1
-if errorlevel 1 (
-  echo HATA: Bu dosyaya sag tiklayip "Yonetici olarak calistir" secin.
-  pause & exit /b 1
+set "DRYRUN="
+if /i "%~1"=="/dryrun" set "DRYRUN=1"
+
+if not defined DRYRUN (
+  net session >nul 2>&1
+  if errorlevel 1 (
+    echo HATA: Bu dosyaya sag tiklayip "Yonetici olarak calistir" secin.
+    pause & exit /b 1
+  )
 )
 
-if not exist "config.env" (
-  echo HATA: config.env bulunamadi.
-  echo config.env.example dosyasini "config.env" olarak kopyalayip doldurun.
-  pause & exit /b 1
+if not exist "preflight.ps1" ( echo HATA: preflight.ps1 eksik. & exit /b 1 )
+if not exist "relay.ps1" ( echo HATA: relay.ps1 eksik. & exit /b 1 )
+
+if not defined DRYRUN (
+  if not exist "config.env" (
+    echo HATA: config.env bulunamadi.
+    echo config.env.example dosyasini "config.env" olarak kopyalayip doldurun.
+    pause & exit /b 1
+  )
 )
 
 if not exist "logs" mkdir logs
 if not exist "state" mkdir state
 
-rem --- FFmpeg (pinli surum + SHA-256 dogrulama) ---
-set "FFVER=7.1.1"
-set "FFZIP=ffmpeg-%FFVER%-essentials_build.zip"
-set "FFURL=https://www.gyan.dev/ffmpeg/builds/packages/%FFZIP%"
-if exist "ffmpeg\bin\ffmpeg.exe" (
-  echo FFmpeg zaten kurulu, indirme atlaniyor.
-  goto :task
+rem --- relay.ps1 sozdizimi (kurulumdan once son kontrol) ---
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$e=$null; [System.Management.Automation.Language.Parser]::ParseFile('%~dp0relay.ps1',[ref]$null,[ref]$e) | Out-Null; if($e -and $e.Count -gt 0){ Write-Output $e[0].Message; exit 1 }"
+if errorlevel 1 ( echo HATA: relay.ps1 sozdizimi hatali; kurulum iptal. & if not defined DRYRUN pause & exit /b 1 )
+
+if defined DRYRUN (
+  echo [DRYRUN] FFmpeg indirme atlandi.
+  echo [DRYRUN] Olusturulacak gorev: SucculluKameraRelay ^(ONSTART, SYSTEM, HIGHEST^)
+  echo [DRYRUN] Komut: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0relay.ps1" -Supervisor
+  echo [DRYRUN] Sistem degisikligi YAPILMADI.
+  exit /b 0
 )
-echo FFmpeg %FFVER% indiriliyor...
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$ProgressPreference='SilentlyContinue';" ^
-  "Invoke-WebRequest -Uri '%FFURL%' -OutFile '%FFZIP%';" ^
-  "Invoke-WebRequest -Uri '%FFURL%.sha256' -OutFile '%FFZIP%.sha256'"
-if errorlevel 1 ( echo HATA: FFmpeg indirilemedi. Internet baglantisini kontrol edin. & pause & exit /b 1 )
 
-echo SHA-256 dogrulaniyor...
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$want=(Get-Content '%FFZIP%.sha256' -Raw).Trim().Split(' ')[0].ToLower();" ^
-  "$got=(Get-FileHash '%FFZIP%' -Algorithm SHA256).Hash.ToLower();" ^
-  "if($want -ne $got){ Write-Error ('HASH UYUSMUYOR: beklenen '+$want+' bulunan '+$got); exit 1 };" ^
-  "Write-Output ('SHA-256 dogru: '+$got)"
-if errorlevel 1 ( echo HATA: FFmpeg hash dogrulamasi basarisiz; kurulum iptal. & del /q "%FFZIP%" & pause & exit /b 1 )
+rem --- FFmpeg (pinli surum + SHA-256; tek kaynak preflight.ps1) ---
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0preflight.ps1" -EnsureFfmpeg
+if errorlevel 1 ( echo HATA: FFmpeg kurulamadi/dogrulanamadi. & pause & exit /b 1 )
 
-echo Aciliyor...
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "Expand-Archive -Force '%FFZIP%' 'ffmpeg-tmp';" ^
-  "$d=Get-ChildItem 'ffmpeg-tmp' -Directory | Select-Object -First 1;" ^
-  "if(Test-Path 'ffmpeg'){Remove-Item 'ffmpeg' -Recurse -Force};" ^
-  "Move-Item $d.FullName 'ffmpeg';" ^
-  "Remove-Item 'ffmpeg-tmp' -Recurse -Force"
-del /q "%FFZIP%" "%FFZIP%.sha256" 2>nul
-if not exist "ffmpeg\bin\ffmpeg.exe" ( echo HATA: ffmpeg.exe bulunamadi. & pause & exit /b 1 )
-
-:task
 rem --- Onceki kurulumu temizle (idempotent) ---
 schtasks /End /TN "SucculluKameraRelay" >nul 2>&1
 schtasks /Delete /F /TN "SucculluKameraRelay" >nul 2>&1

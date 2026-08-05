@@ -51,10 +51,18 @@ gateway domaini değiştirilir (TLS otomatik), aşağıdaki §6 domain adımlar�
 1. `dist-tools/sucullu-kamera-relay.zip` → PC'ye kopyala, `C:\SucculluKameraRelay` içine aç.
 2. `config.env.example` → `config.env` kopyala; `NVR_USER`, `NVR_PASSWORD`,
    `SRT_PASSPHRASE` doldur (passphrase = Coolify'daki değer; SRT_HOST hazır yazılı).
-3. `install.cmd` → sağ tık → **Yönetici olarak çalıştır**.
+3. **`preflight.cmd`** (yönetici gerekmez) → **PRE-FLIGHT PASS** görülmeli.
+   Kontroller: PowerShell 5.1, paket bütünlüğü, `relay.ps1` sözdizimi,
+   config alanları (değerler yazılmaz), pinli FFmpeg + SHA-256, FFmpeg'in SRT
+   desteği, NVR TCP 554, SRT hedefi DNS/UDP hazırlığı ve kamera1 ile ~20 sn
+   foreground dry-run (temiz kapatılır). Sisteme kalıcı değişiklik yapmaz.
+4. PASS ise `install.cmd` → sağ tık → **Yönetici olarak çalıştır**.
 
-Kurulum FFmpeg 7.1.1'i indirir (SHA-256 doğrulamalı), 9 relay'i başlatır ve
-açılışta otomatik başlatma görevi kurar (oturum açılmasa da SYSTEM olarak çalışır).
+Kurulum, preflight'ın indirdiği pinli FFmpeg'i kullanır (BtbN autobuild
+2026-08-04, SHA-256 sabit; **SRT protokolü bu build'de doğrulandı**), 9 relay'i
+başlatır ve açılışta otomatik başlatma görevi kurar (oturum açılmasa da SYSTEM).
+CI, `windows-latest` üzerinde sözdizimi, config parser testleri ve
+install/uninstall `/dryrun` kontrollerini her push'ta çalıştırır.
 
 Günlük işletme: `status.cmd` / `stop.cmd` / `start.cmd`; loglar `logs\<kamera>.log`
 (5 MB rotasyon ×3). Ayrıntı: `tools/windows-camera-relay/README.md`.

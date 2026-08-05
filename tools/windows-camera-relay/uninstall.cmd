@@ -1,7 +1,21 @@
 @echo off
 setlocal
 rem Kaldirma — "Yonetici olarak calistir" gerekir. Idempotenttir.
+rem   uninstall.cmd            normal kaldirma
+rem   uninstall.cmd /dryrun    hicbir sey degistirmeden dogrulama (CI icin)
 cd /d "%~dp0"
+
+set "DRYRUN="
+if /i "%~1"=="/dryrun" set "DRYRUN=1"
+
+if defined DRYRUN (
+  echo [DRYRUN] Silinecek gorev: SucculluKameraRelay
+  echo [DRYRUN] Sonlandirilacak surecler: relay.ps1 worker'lari + ffmpeg
+  echo [DRYRUN] Korunacak: config.env, logs\, ffmpeg\
+  echo [DRYRUN] Sistem degisikligi YAPILMADI.
+  exit /b 0
+)
+
 net session >nul 2>&1
 if errorlevel 1 ( echo HATA: Yonetici olarak calistirin. & pause & exit /b 1 )
 

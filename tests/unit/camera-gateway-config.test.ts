@@ -130,6 +130,45 @@ describe('windows relay sözleşmesi', () => {
     expect(ps1).toContain("'-f', 'mpegts'");
   });
 
+  it('preflight mutasyonsuz: servis/task/registry/firewall değiştirmez', () => {
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    expect(pf).not.toMatch(/schtasks\s+\/Create/i);
+    expect(pf).not.toMatch(/New-Service|Set-Service/i);
+    expect(pf).not.toMatch(/netsh\s+advfirewall|New-NetFirewallRule/i);
+    expect(pf).not.toMatch(/Set-ItemProperty\s+.*HKLM|reg\s+add/i);
+    // dry-run tek kamera ve temiz kapanış
+    expect(pf).toContain('Preview_01_sub');
+    expect(pf).toContain('taskkill /PID $proc.Id /T /F');
+    expect(pf).toMatch(/PRE-FLIGHT PASS/);
+    expect(pf).toMatch(/PRE-FLIGHT FAIL/);
+  });
+
+  it('FFmpeg pini tek kaynakta ve SHA-256 doğrulamalı; install onu kullanır', () => {
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    expect(pf).toMatch(/\$FfmpegSha256 = '[0-9a-f]{64}'/);
+    expect(pf).toMatch(
+      /FfmpegUrl = 'https:\/\/github\.com\/BtbN\/FFmpeg-Builds\/releases\/download\/autobuild-/,
+    );
+    expect(pf).toContain('HASH UYUSMUYOR');
+    const install = read('tools/windows-camera-relay/install.cmd');
+    expect(install).toContain('preflight.ps1" -EnsureFfmpeg');
+    // install kendi indirme mantigini tasimaz (tek kaynak)
+    expect(install).not.toMatch(/Invoke-WebRequest/);
+  });
+
+  it('install/uninstall dry-run sistem değişikliği yapmaz', () => {
+    const install = read('tools/windows-camera-relay/install.cmd');
+    const uninstall = read('tools/windows-camera-relay/uninstall.cmd');
+    for (const s of [install, uninstall]) {
+      expect(s).toContain('/dryrun');
+      expect(s).toContain('[DRYRUN]');
+    }
+    // dry-run dalı schtasks satırlarından ÖNCE çıkar
+    expect(install.indexOf('[DRYRUN] Sistem degisikligi YAPILMADI')).toBeLessThan(
+      install.indexOf('schtasks /Create'),
+    );
+  });
+
   it('config.env.example gerçek secret içermiyor', () => {
     const env = read('tools/windows-camera-relay/config.env.example');
     expect(env).toMatch(/^NVR_USER=$/m);

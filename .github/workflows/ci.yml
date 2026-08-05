@@ -107,3 +107,52 @@ jobs:
           name: ci-visual-captures
           path: ci-visual-out/
           retention-days: 7
+
+  windows-relay:
+    name: Windows relay (parse / birim testleri / dry-run)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # relay.ps1 ve preflight.ps1 gercek Windows PowerShell 5.1 parser'i ile
+      # dogrulanir; sozdizimi hatasi CI'yi acikca dusurur.
+      - name: PowerShell 5.1 sozdizimi
+        shell: powershell
+        run: |
+          $files = @('tools\windows-camera-relay\relay.ps1',
+                     'tools\windows-camera-relay\preflight.ps1',
+                     'tests\windows\relay-config.tests.ps1')
+          $bad = 0
+          foreach ($f in $files) {
+            $e = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$null, [ref]$e) | Out-Null
+            if ($e -and $e.Count -gt 0) { Write-Output "FAIL $f : $($e[0].Message)"; $bad++ }
+            else { Write-Output "OK   $f" }
+          }
+          if ($bad -gt 0) { exit 1 }
+
+      - name: Batch dosyalari mevcut
+        shell: powershell
+        run: |
+          $need = @('install.cmd','uninstall.cmd','start.cmd','stop.cmd','status.cmd','preflight.cmd','config.env.example','README.md')
+          $miss = @($need | Where-Object { -not (Test-Path "tools\windows-camera-relay\$_") })
+          if ($miss.Count) { Write-Output "eksik: $($miss -join ', ')"; exit 1 }
+          Write-Output "$($need.Count) dosya mevcut"
+
+      - name: Config parser birim testleri
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tests\windows\relay-config.tests.ps1
+
+      # Dry-run: hicbir scheduled task/registry/firewall degisikligi yapmaz.
+      - name: install/uninstall dry-run
+        shell: cmd
+        run: |
+          call tools\windows-camera-relay\install.cmd /dryrun || exit /b 1
+          call tools\windows-camera-relay\uninstall.cmd /dryrun || exit /b 1
+
+      - name: Kurulum sonrasi sistem degisikligi olmadigini dogrula
+        shell: powershell
+        run: |
+          $t = schtasks /Query /TN 'SucculluKameraRelay' 2>$null
+          if ($LASTEXITCODE -eq 0) { Write-Output 'HATA: dry-run gorev olusturmus'; exit 1 }
+          Write-Output 'OK: scheduled task olusturulmadi'

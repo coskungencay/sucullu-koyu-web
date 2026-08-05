@@ -10,7 +10,13 @@ Site bu yayınları HTTPS HLS olarak oynatır.
 2. `config.env.example` dosyasını **`config.env`** adıyla kopyalayın ve içindeki
    `NVR_USER`, `NVR_PASSWORD`, `SRT_PASSPHRASE` alanlarını doldurun
    (`SRT_HOST` sunucu adresi olarak önceden yazılıdır).
-3. `install.cmd` dosyasına **sağ tıklayıp "Yönetici olarak çalıştır"** deyin.
+3. **Önce `preflight.cmd` çalıştırın** (çift tık; yönetici gerekmez).
+   Sisteme hiçbir kalıcı değişiklik yapmaz: ayarları, NVR erişimini ve
+   sunucu bağlantısını kontrol eder, kamera1 ile ~20 saniyelik test yayını
+   yapıp kapatır. Sonuç **PRE-FLIGHT PASS** olmalıdır.
+4. PASS aldıysanız `install.cmd` dosyasına **sağ tıklayıp "Yönetici olarak
+   çalıştır"** deyin. (FAIL alırsanız kuruluma geçmeyin; ekrandaki FAIL
+   satırlarını düzeltin veya bize gönderin.)
 
 Kurulum; doğrulanmış FFmpeg'i indirir (SHA-256 kontrolü ile), 9 kamera
 relay'ini başlatır ve **bilgisayar her açıldığında otomatik başlayacak**
@@ -20,12 +26,14 @@ relay'ini başlatır ve **bilgisayar her açıldığında otomatik başlayacak**
 
 | Komut | İşlev |
 |---|---|
+| `preflight.cmd` | Kurulum öncesi mutasyonsuz kontrol + kısa dry-run |
 | `status.cmd` | 9 kameranın anlık durumu + son log satırı |
 | `stop.cmd` | Relay'i temiz durdurur |
 | `start.cmd` | Relay'i yeniden başlatır |
 | `uninstall.cmd` | Otomatik başlatmayı kaldırır (yönetici gerekir) |
 
-Loglar: `logs\kamera1.log` … `logs\p850.log` (5 MB'da döner, 3 kopya saklanır).
+Loglar: `logs\kamera1.log` … `logs\p850.log` (5 MB'da döner, 3 kopya saklanır);
+preflight çıktısı `logs\preflight.log`. Loglarda parola/passphrase maskelenir.
 
 ## Nasıl çalışır
 
