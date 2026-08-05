@@ -156,5 +156,7 @@ jobs:
           # schtasks gorev yoksa stderr'e yazar; PowerShell bunu NativeCommandError
           # sayar. cmd icinde calistirip yalnizca exit koduna bakiyoruz.
           cmd /c "schtasks /Query /TN SucculluKameraRelay >nul 2>&1"
-          if ($LASTEXITCODE -eq 0) { Write-Output 'HATA: dry-run gorev olusturmus'; exit 1 }
+          $rc = $LASTEXITCODE
+          if ($rc -eq 0) { Write-Output 'HATA: dry-run gorev olusturmus'; exit 1 }
           Write-Output 'OK: scheduled task olusturulmadi'
+          exit 0
