@@ -81,6 +81,17 @@ function Rotate-Log([string]$cam) {
     }
 }
 
+# PowerShell 5.1'de $ErrorActionPreference='Stop' iken native surecin stderr
+# ciktisi terminating error'a donusur (FFmpeg normal uyarilarini stderr'e yazar).
+# Bu yuzden YALNIZCA native cagri suresince 'Continue'a gecilir; script'in geri
+# kalani 'Stop' guvenligini korur.
+function Invoke-Native {
+    param([scriptblock]$Body)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { & $Body } finally { $ErrorActionPreference = $prev }
+}
+
 function Get-RtspUrl([hashtable]$cfg, [string]$channel) {
     $u = [uri]::EscapeDataString($cfg.NVR_USER)
     $p = [uri]::EscapeDataString($cfg.NVR_PASSWORD)
@@ -96,13 +107,41 @@ function Get-SrtUrl([hashtable]$cfg, [string]$cam) {
 }
 
 function Detect-Codec([hashtable]$cfg, [string]$cam, [string]$rtspUrl) {
-    # Video codec tespiti (h264 -> stream copy; hevc -> H.264 transcode)
-    $out = & $FfprobeExe -v error -rtsp_transport tcp -rw_timeout 15000000 `
-        -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 $rtspUrl 2>&1 |
-        ForEach-Object { "$_" }
+    # Video codec tespiti. NOT: bu FFmpeg build'i rw-timeout anahtarini kabul
+    # etmiyor; RTSP demuxer icin dogru anahtar -timeout (mikrosaniye).
+    $out = Invoke-Native {
+        & $FfprobeExe -v error -rtsp_transport tcp -timeout 15000000 `
+            -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 $rtspUrl 2>&1 |
+            ForEach-Object { "$_" }
+    }
     $codec = ($out | Where-Object { $_ -match '^[a-z0-9]+$' } | Select-Object -First 1)
     foreach ($l in $out) { if ($l -notmatch '^[a-z0-9]+$') { Write-CamLog $cam "ffprobe: $l" $cfg } }
     return $codec
+}
+
+# VIDEO_MODE: transcode (varsayilan) | copy | auto
+# Saha gercegi: NVR'nin hazir H264 substream'indeki DTS degerleri HLS icin
+# bozuk ("unable to extract DTS: too many reordered frames"), bu yuzden
+# varsayilan yeniden kodlamadir. 'copy' yalnizca DTS'i saglam kaynaklar icin.
+function Get-VideoArgs([hashtable]$cfg, [string]$codec) {
+    $mode = if ($cfg.ContainsKey('VIDEO_MODE') -and $cfg['VIDEO_MODE']) { $cfg['VIDEO_MODE'].Trim().ToLower() } else { 'transcode' }
+    if ($mode -eq 'auto') { $mode = if ($codec -eq 'h264') { 'copy' } else { 'transcode' } }
+    if ($mode -eq 'copy') { return @('-c:v', 'copy') }
+    return @('-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency',
+             '-vf', 'scale=896:512:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2',
+             '-r', '10', '-g', '20', '-b:v', '700k', '-maxrate', '900k',
+             '-bufsize', '1400k', '-pix_fmt', 'yuv420p')
+}
+
+# AUDIO_MODE: off (varsayilan) | aac
+# Saha gercegi: NVR ses kanali surekli "Queue input is backward in time" ve
+# non-monotonic DTS uretiyor; yayin video-only tutulur.
+function Get-AudioArgs([hashtable]$cfg) {
+    $mode = if ($cfg.ContainsKey('AUDIO_MODE') -and $cfg['AUDIO_MODE']) { $cfg['AUDIO_MODE'].Trim().ToLower() } else { 'off' }
+    if ($mode -eq 'aac') {
+        return @{ Map = @('-map', '0:a?'); Codec = @('-c:a', 'aac', '-b:a', '64k', '-ac', '1') }
+    }
+    return @{ Map = @('-an'); Codec = @() }
 }
 
 function Run-Worker([string]$cam) {
@@ -119,28 +158,28 @@ function Run-Worker([string]$cam) {
         Write-CamLog $cam 'HATA: codec tespit edilemedi (NVR erisimi/parola kontrol edin)' $cfg
         exit 1
     }
-    Write-CamLog $cam "baglaniyor (video codec: $codec)" $cfg
+    $videoMode = if ($cfg.ContainsKey('VIDEO_MODE') -and $cfg['VIDEO_MODE']) { $cfg['VIDEO_MODE'] } else { 'transcode' }
+    $audioMode = if ($cfg.ContainsKey('AUDIO_MODE') -and $cfg['AUDIO_MODE']) { $cfg['AUDIO_MODE'] } else { 'off' }
+    Write-CamLog $cam "baglaniyor (kaynak codec: $codec, video: $videoMode, ses: $audioMode)" $cfg
 
+    $audio = Get-AudioArgs $cfg
+    # NVR timestamp'leri duzensiz gelebildiginden PTS yeniden uretilir ve
+    # duvar saati zaman damgasi kullanilir (saha dogrulamasi).
     $common = @('-hide_banner', '-loglevel', 'warning', '-nostats',
-                '-rtsp_transport', 'tcp', '-rw_timeout', '15000000', '-i', $rtsp,
-                '-map', '0:v:0', '-map', '0:a?')
-    if ($codec -eq 'h264') {
-        $vArgs = @('-c:v', 'copy')
-    } else {
-        # H.265 vb. -> tarayici uyumlu H.264 (substream ~896x512@10fps hedefi)
-        $vArgs = @('-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency',
-                   '-vf', 'scale=896:512:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2',
-                   '-r', '10', '-g', '20', '-b:v', '700k', '-maxrate', '900k',
-                   '-bufsize', '1400k', '-pix_fmt', 'yuv420p')
-    }
-    $aArgs = @('-c:a', 'aac', '-b:a', '64k', '-ac', '1')   # ses yoksa -map 0:a? sayesinde sorun olmaz
+                '-rtsp_transport', 'tcp', '-timeout', '15000000',
+                '-fflags', '+genpts', '-use_wallclock_as_timestamps', '1',
+                '-i', $rtsp, '-map', '0:v:0') + $audio.Map
+    $vArgs = Get-VideoArgs $cfg $codec
+    $aArgs = $audio.Codec
     $outArgs = @('-muxdelay', '0.1', '-f', 'mpegts', $srt)
 
     # ffmpeg cikisi maskelenerek loga akar; parola diske asla yazilmaz.
-    & $FfmpegExe @common @vArgs @aArgs @outArgs 2>&1 | ForEach-Object {
-        Write-CamLog $cam "$_" $cfg
+    $code = Invoke-Native {
+        & $FfmpegExe @common @vArgs @aArgs @outArgs 2>&1 | ForEach-Object {
+            Write-CamLog $cam "$_" $cfg
+        }
+        $LASTEXITCODE
     }
-    $code = $LASTEXITCODE
     Write-CamLog $cam "ffmpeg sonlandi (exit=$code)" $cfg
     exit $code
 }
