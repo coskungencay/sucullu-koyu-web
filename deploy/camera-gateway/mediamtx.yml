@@ -19,6 +19,7 @@ playback: no
 rtsp: no
 rtmp: no
 webrtc: no
+moq: no
 
 # --- SRT ingest ---
 srt: yes
@@ -34,8 +35,9 @@ hlsSegmentCount: 7
 hlsSegmentDuration: 1s
 hlsPartDuration: 200ms
 hlsSegmentMaxSize: 50M
-# hlsAllowOrigin environment'tan override edilir (MTX_HLSALLOWORIGIN).
-hlsAllowOrigin: ''
+# hlsAllowOrigins environment'tan override edilir (MTX_HLSALLOWORIGINS).
+# 1.20.0'da tekil hlsAllowOrigin deprecated'tir.
+hlsAllowOrigins: []
 
 pathDefaults:
   # Kayıt kapalı — yalnızca canlı yayın.

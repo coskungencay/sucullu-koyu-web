@@ -60,6 +60,7 @@ describe('mediamtx.yml sözleşmesi', () => {
       'rtsp: no',
       'rtmp: no',
       'webrtc: no',
+      'moq: no',
       'srt: yes',
       'hls: yes',
       'record: no',
@@ -70,7 +71,7 @@ describe('mediamtx.yml sözleşmesi', () => {
 
   it('config dosyasında gerçek secret yok (env üzerinden gelir)', () => {
     expect(yml).toContain("srtPublishPassphrase: ''");
-    expect(yml).toContain("hlsAllowOrigin: ''");
+    expect(yml).toContain('hlsAllowOrigins: []');
   });
 });
 
@@ -95,7 +96,7 @@ describe('docker-compose sözleşmesi', () => {
     expect(compose).toMatch(
       /MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE=\$\{MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE:\?/,
     );
-    expect(compose).toMatch(/MTX_HLSALLOWORIGIN=\$\{MTX_HLSALLOWORIGIN:\?/);
+    expect(compose).toMatch(/MTX_HLSALLOWORIGINS=\$\{MTX_HLSALLOWORIGINS:\?/);
   });
 });
 
@@ -123,8 +124,9 @@ describe('windows relay sözleşmesi', () => {
     expect(ps1).toContain('Mask-Secrets');
   });
 
-  it('SRT çıkışı passphrase + streamid publish kalıbında', () => {
-    expect(ps1).toContain('passphrase=${pp}&streamid=publish:${cam}');
+  it('SRT çıkışı MediaMTX streamid sözleşmesinde (#!::m=publish,r=<path>)', () => {
+    expect(ps1).toContain('EscapeDataString("#!::m=publish,r=$cam")');
+    expect(ps1).toContain('passphrase=${pp}&streamid=${sid}');
     expect(ps1).toContain("'-f', 'mpegts'");
   });
 
