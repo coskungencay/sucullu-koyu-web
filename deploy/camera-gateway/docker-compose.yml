@@ -1,0 +1,29 @@
+# Sücüllü Köyü kamera gateway — MediaMTX (SRT ingest → HLS output)
+# Coolify docker-compose build pack ile deploy edilir.
+#
+# - Image kararlı sürüme pinlidir; 'latest' YASAK.
+# - SRT ingest: host 8890/udp (Coolify proxy'si UDP taşımaz; host mapping şart).
+# - HLS 8888: Coolify proxy arkasında HTTPS domainine bağlanır
+#   (SERVICE_FQDN_MEDIAMTX_8888 Coolify domain yönlendirme sözleşmesidir).
+# - Secrets (SRT passphrase) yalnızca Coolify environment'ından gelir;
+#   bu repoda hiçbir gerçek secret yoktur.
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.20.0
+    restart: unless-stopped
+    environment:
+      - SERVICE_FQDN_MEDIAMTX_8888
+      # SRT publisher passphrase — Coolify'da SECRET olarak tanımlanır (zorunlu).
+      - MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE=${MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE:?srt-passphrase-tanimsiz}
+      # HLS CORS origin'i — yalnızca site origin'i (domain geçişinde tek değişecek yer).
+      - MTX_HLSALLOWORIGIN=${MTX_HLSALLOWORIGIN:?hls-origin-tanimsiz}
+    ports:
+      - "8890:8890/udp"
+    expose:
+      - "8888"
+    volumes:
+      - type: bind
+        source: ./mediamtx.yml
+        target: /mediamtx.yml
+        read_only: true

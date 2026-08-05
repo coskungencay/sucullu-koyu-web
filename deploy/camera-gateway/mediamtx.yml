@@ -1,0 +1,57 @@
+# Sücüllü Köyü kamera gateway — MediaMTX 1.20.0 yapılandırması
+#
+# Prensipler:
+# - Yalnızca SRT ingest + HLS output; diğer tüm protokoller ve kayıt KAPALI.
+# - Yalnızca 9 tanımlı path'e yayın kabul edilir (catch-all yok) — rastgele
+#   path'e publisher bağlanamaz.
+# - SRT publish passphrase ve HLS CORS origin'i environment'tan gelir
+#   (MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE, MTX_HLSALLOWORIGIN);
+#   bu dosyada secret YOKTUR.
+# - HLS kaydı yok, playback yok → disk dolmaz (segmentler RAM'de/rotasyonlu).
+
+logLevel: info
+
+# --- Kapalı yüzeyler ---
+api: no
+metrics: no
+pprof: no
+playback: no
+rtsp: no
+rtmp: no
+webrtc: no
+
+# --- SRT ingest ---
+srt: yes
+srtAddress: :8890
+
+# --- HLS output ---
+hls: yes
+hlsAddress: :8888
+hlsEncryption: no            # TLS, Coolify proxy'sinde sonlanır
+hlsAlwaysRemux: no
+hlsVariant: fmp4             # hls.js 1.4.12 ile geniş uyumluluk
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsSegmentMaxSize: 50M
+# hlsAllowOrigin environment'tan override edilir (MTX_HLSALLOWORIGIN).
+hlsAllowOrigin: ''
+
+pathDefaults:
+  # Kayıt kapalı — yalnızca canlı yayın.
+  record: no
+  # srtPublishPassphrase environment'tan override edilir
+  # (MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE). Boş bırakılamaz; compose zorunlu kılar.
+  srtPublishPassphrase: ''
+
+# Tam olarak 9 publisher path — başka path tanımı YOK.
+paths:
+  kamera1: {}
+  kamera2: {}
+  kamera6: {}
+  kamera5: {}
+  kamera7: {}
+  kamera8: {}
+  kamera11: {}
+  kamera10: {}
+  p850: {}

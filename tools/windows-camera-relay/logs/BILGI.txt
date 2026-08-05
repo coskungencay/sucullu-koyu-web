@@ -1,0 +1,1 @@
+Log dosyalari bu klasore yazilir.
