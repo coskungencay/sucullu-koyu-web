@@ -25,6 +25,8 @@ export default tseslint.config(
         document: 'readonly',
         setTimeout: 'readonly',
         fetch: 'readonly',
+        AbortController: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
   },

@@ -70,6 +70,34 @@ SRT_PASSPHRASE=0123456789abcdef
     Assert 'streamid ham bosluk/ayirici icermez' ($sidEncoded -notmatch '[\s&]')
     Assert 'SRT passphrase parametresi var' ($srt -like '*passphrase=*')
 
+    Write-Output '--- video/ses modu (saha varsayilanlari) ---'
+    $vDefault = Get-VideoArgs $cfg 'h264'
+    Assert 'VIDEO_MODE varsayilani transcode (libx264)' ($vDefault -contains 'libx264') "bulunan: $($vDefault -join ' ')"
+    Assert 'transcode profili ultrafast/zerolatency' (($vDefault -contains 'ultrafast') -and ($vDefault -contains 'zerolatency'))
+    Assert 'transcode 10 FPS + GOP 20' (($vDefault -contains '10') -and ($vDefault -contains '20'))
+
+    $cfgCopy = $cfg.Clone(); $cfgCopy['VIDEO_MODE'] = 'copy'
+    Assert 'VIDEO_MODE=copy stream copy uretir' ((Get-VideoArgs $cfgCopy 'h264') -contains 'copy')
+    $cfgAuto = $cfg.Clone(); $cfgAuto['VIDEO_MODE'] = 'auto'
+    Assert 'VIDEO_MODE=auto h264 icin copy' ((Get-VideoArgs $cfgAuto 'h264') -contains 'copy')
+    Assert 'VIDEO_MODE=auto hevc icin transcode' ((Get-VideoArgs $cfgAuto 'hevc') -contains 'libx264')
+
+    $aDefault = Get-AudioArgs $cfg
+    Assert 'AUDIO_MODE varsayilani off (-an)' ($aDefault.Map -contains '-an')
+    Assert 'AUDIO_MODE=off ses codec argumani yok' ($aDefault.Codec.Count -eq 0)
+    $cfgAac = $cfg.Clone(); $cfgAac['AUDIO_MODE'] = 'aac'
+    $aAac = Get-AudioArgs $cfgAac
+    Assert 'AUDIO_MODE=aac ses haritasi ve codec ekler' (($aAac.Map -contains '0:a?') -and ($aAac.Codec -contains 'aac'))
+
+    Write-Output '--- native cagri scope (PS 5.1) ---'
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Stop'
+    $ranBody = $false
+    Invoke-Native { $script:insideEap = $ErrorActionPreference; $ranBody = $true } | Out-Null
+    Assert 'Invoke-Native icinde ErrorActionPreference=Continue' ($script:insideEap -eq 'Continue') "bulunan: $script:insideEap"
+    Assert 'Invoke-Native sonrasi Stop geri yuklenir' ($ErrorActionPreference -eq 'Stop')
+    $ErrorActionPreference = $prevEap
+
     Write-Output '--- secret maskeleme ---'
     $masked = Mask-Secrets "baglanti: $rtsp parola=$($cfg['NVR_PASSWORD']) pp=$($cfg['SRT_PASSPHRASE'])" $cfg
     Assert 'ham parola maskelenir' (-not $masked.Contains('p@ss:w/rd#1'))

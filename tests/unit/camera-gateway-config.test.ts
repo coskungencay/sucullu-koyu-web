@@ -115,7 +115,37 @@ describe('windows relay sözleşmesi', () => {
   it('RTSP substream kalıbı ve TCP transport + 15 sn timeout kullanılıyor', () => {
     expect(ps1).toContain('Preview_${channel}_sub');
     expect(ps1).toContain("'-rtsp_transport', 'tcp'");
-    expect(ps1).toContain("'-rw_timeout', '15000000'");
+    // Saha bulgusu: bu FFmpeg build'i -rw_timeout kabul etmiyor, -timeout doğru
+    expect(ps1).toContain("'-timeout', '15000000'");
+    expect(ps1).not.toContain('-rw_timeout');
+  });
+
+  it('PowerShell 5.1: native çağrılar Continue scope içinde sarmalanmış', () => {
+    expect(ps1).toContain('function Invoke-Native');
+    expect(ps1).toMatch(/\$ErrorActionPreference = 'Continue'/);
+    expect(ps1).toMatch(/finally \{ \$ErrorActionPreference = \$prev \}/);
+    // ffmpeg ve ffprobe çağrıları sarmalayıcı içinde
+    expect(ps1).toMatch(/\$code = Invoke-Native \{/);
+    expect(ps1).toMatch(/\$out = Invoke-Native \{/);
+    // Global 'Stop' korunuyor (script başında)
+    expect(ps1).toContain("$ErrorActionPreference = 'Stop'");
+  });
+
+  it('NVR timestamp düzeltmeleri girdi tarafında', () => {
+    expect(ps1).toContain("'-fflags', '+genpts'");
+    expect(ps1).toContain("'-use_wallclock_as_timestamps', '1'");
+  });
+
+  it('video/ses modu config ile yönetilir; saha varsayılanı transcode + video-only', () => {
+    expect(ps1).toContain('function Get-VideoArgs');
+    expect(ps1).toContain('function Get-AudioArgs');
+    // varsayılanlar
+    expect(ps1).toMatch(/VIDEO_MODE'\]\.Trim\(\)\.ToLower\(\) \} else \{ 'transcode' \}/);
+    expect(ps1).toMatch(/AUDIO_MODE'\]\.Trim\(\)\.ToLower\(\) \} else \{ 'off' \}/);
+    expect(ps1).toContain("'-preset', 'ultrafast'");
+    expect(ps1).toContain("@('-an')");
+    // if($false) türü ölü-kod hack'i yok
+    expect(ps1).not.toMatch(/if\s*\(\s*\$false\s*\)/);
   });
 
   it('credential URL-encode ediliyor ve loglar maskeleniyor', () => {
@@ -130,7 +160,38 @@ describe('windows relay sözleşmesi', () => {
     expect(ps1).not.toContain('#!::m=publish');
     expect(ps1).toContain("'-f', 'mpegts'");
     const pf = read('tools/windows-camera-relay/preflight.ps1');
-    expect(pf).toContain('streamid=publish:kamera1');
+    expect(pf).toContain('streamid=publish:$testCam');
+  });
+
+  it('preflight: FFmpeg kurulum fonksiyonu dönüş değerini kirletmez', () => {
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    const fn = pf.slice(
+      pf.indexOf('function Install-PinnedFfmpeg'),
+      pf.indexOf('if ($EnsureFfmpeg)'),
+    );
+    // Boolean döndüren fonksiyon içinde Write-Output olmamalı (Object[] üretir)
+    expect(fn).not.toContain('Write-Output');
+    expect(fn).toContain('Write-Host');
+    expect(pf).toContain('[bool]((Install-PinnedFfmpeg) | Select-Object -Last 1)');
+  });
+
+  it('preflight: test kanalı config veya aktif-kanal fallback (hardcode yok)', () => {
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    expect(pf).toContain('PREFLIGHT_CAMERA');
+    expect(pf).toContain('$CameraMapPf');
+    // kanal eşlemesi relay.ps1'den okunur, kopyalanmaz
+    expect(pf).toContain('Get-Content $RelayPs1 -Raw');
+    // sabit kanal/kamera hardcode edilmemiş
+    expect(pf).not.toContain('Preview_01_sub');
+    expect(pf).not.toContain('streamid=publish:kamera1');
+  });
+
+  it('preflight dry-run relay ile aynı profili kullanır', () => {
+    const pf = read('tools/windows-camera-relay/preflight.ps1');
+    expect(pf).toContain("'-timeout', '15000000'");
+    expect(pf).toContain("'-fflags', '+genpts'");
+    expect(pf).toContain("'-an'");
+    expect(pf).not.toContain('-rw_timeout');
   });
 
   it('preflight mutasyonsuz: servis/task/registry/firewall değiştirmez', () => {
@@ -140,7 +201,6 @@ describe('windows relay sözleşmesi', () => {
     expect(pf).not.toMatch(/netsh\s+advfirewall|New-NetFirewallRule/i);
     expect(pf).not.toMatch(/Set-ItemProperty\s+.*HKLM|reg\s+add/i);
     // dry-run tek kamera ve temiz kapanış
-    expect(pf).toContain('Preview_01_sub');
     expect(pf).toContain('taskkill /PID $proc.Id /T /F');
     expect(pf).toMatch(/PRE-FLIGHT PASS/);
     expect(pf).toMatch(/PRE-FLIGHT FAIL/);
