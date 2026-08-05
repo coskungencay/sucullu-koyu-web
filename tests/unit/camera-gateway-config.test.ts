@@ -240,6 +240,16 @@ describe('windows relay sözleşmesi', () => {
   });
 });
 
+describe('build-time kamera env sözleşmesi', () => {
+  it('Dockerfile VITE_CAMERA_BASE_URL build arg olarak geçirir; varsayılan boş', () => {
+    const df = read('Dockerfile');
+    expect(df).toContain('ARG VITE_CAMERA_BASE_URL=""');
+    expect(df).toContain('ENV VITE_CAMERA_BASE_URL=$VITE_CAMERA_BASE_URL');
+    // build adımı ARG tanımından SONRA gelmeli, yoksa değer bundle'a girmez
+    expect(df.indexOf('ARG VITE_CAMERA_BASE_URL')).toBeLessThan(df.indexOf('npm run build'));
+  });
+});
+
 describe('frontend sözleşmesi değişmedi', () => {
   it('URL kalıbı {base}/{streamPath}/index.m3u8 ve 9 kamera korunuyor', () => {
     expect(cameras).toHaveLength(9);
