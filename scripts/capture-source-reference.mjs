@@ -61,6 +61,25 @@ async function settle(page) {
       await new Promise((r) => setTimeout(r, 120));
     }
   });
+  // Görünür tüm görseller yüklenene kadar bekle: yavaş runner'larda
+  // yüklenmemiş fotoğraflar dev görsel farklar üretiyordu (CI flakiliği).
+  await page
+    .evaluate(async () => {
+      const pending = Array.from(document.images).filter(
+        (i) => !(i.complete && i.naturalWidth > 0),
+      );
+      await Promise.all(
+        pending.map(
+          (img) =>
+            new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true });
+              img.addEventListener('error', resolve, { once: true });
+              setTimeout(resolve, 20000);
+            }),
+        ),
+      );
+    })
+    .catch(() => {});
   // Sayaç (2s) + reveal (0.8s) animasyonlarının bitmesini bekle
   await page.waitForTimeout(2600);
   await page.evaluate(() => window.scrollTo(0, 0));
