@@ -241,6 +241,16 @@ describe('windows relay sözleşmesi', () => {
 });
 
 describe('build-time kamera env sözleşmesi', () => {
+  it('.env.production gateway URL sağlar; HTTPS ve secret içermez', () => {
+    const env = read('.env.production');
+    const m = /^VITE_CAMERA_BASE_URL=(.+)$/m.exec(env);
+    expect(m, 'VITE_CAMERA_BASE_URL tanımlı olmalı').not.toBeNull();
+    const url = m![1].trim();
+    expect(url.startsWith('https://')).toBe(true);
+    expect(url).not.toMatch(/@/); // credential taşımaz
+    expect(env).not.toMatch(/passphrase|password|token/i);
+  });
+
   it('Dockerfile VITE_CAMERA_BASE_URL build arg olarak geçirir; varsayılan boş', () => {
     const df = read('Dockerfile');
     expect(df).toContain('ARG VITE_CAMERA_BASE_URL=""');
