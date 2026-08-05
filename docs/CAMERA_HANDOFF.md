@@ -3,6 +3,9 @@
 > **GÜNCELLEME (05.08.2026):** Yeni yayın altyapısı UYGULANDI — Reolink NVS36
 > → Windows FFmpeg relay → şifreli SRT → Coolify MediaMTX → HTTPS HLS.
 > Eski `kameraizle.sucullukoyu.com` altyapısı GERİ GETİRİLMEYECEK; aşağıdaki
+> **05.08.2026 CANLI:** Windows relay kurulu; 6 kanal yayında (kamera6, kamera5,
+> kamera7, kamera8, kamera10, p850), 3 kanal NVR'de fiziksel olarak kapalı
+> (kamera1, kamera2, kamera11). Gateway: sucullu-koyu-camera.46.225.123.167.sslip.io
 > tarihsel teşhis bölümleri arşiv niteliğindedir. Güncel işletme kılavuzu:
 > `docs/CAMERA_DEPLOYMENT_RUNBOOK.md`. Kanal eşlemesi runbook'ta ve
 > `tools/windows-camera-relay/relay.ps1` içinde sözleşmelidir.

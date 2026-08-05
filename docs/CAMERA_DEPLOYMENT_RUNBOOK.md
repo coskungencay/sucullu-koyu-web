@@ -11,6 +11,22 @@ Reolink NVS36 (192.168.1.113, RTSP substream)
   → Site (hls.js player): VITE_CAMERA_BASE_URL
 ```
 
+## Saha durumu (05.08.2026)
+
+Windows relay köy bilgisayarında **kurulu ve çalışıyor**. NVR'de şu anda
+**6 fiziksel kanal çevrimiçi**; 3 kanal Reolink uygulamasında da çevrimdışı:
+
+| Durum | Yollar |
+|---|---|
+| ✅ Aktif (6) | `kamera6` `kamera5` `kamera7` `kamera8` `kamera10` `p850` |
+| ⛔ NVR'de kapalı (3) | `kamera1` `kamera2` `kamera11` |
+
+Çevrimdışı kanallar sitede **kontrollü offline** görünür (görüntü çoğaltılmaz,
+sahte "canlı" gösterilmez). Aktif sayaç gerçek player state'inden türetilir.
+
+Yayın profili (saha doğrulaması): H.264, 896×512, 10 FPS, ~700 kbps,
+**video-only** (ses NVR tarafında non-monotonic DTS ürettiği için kapalı).
+
 Kanal eşlemesi (kesin sözleşme; unit test ile kilitli):
 
 | HLS path | NVR kaynağı | | HLS path | NVR kaynağı |
@@ -80,6 +96,21 @@ Relay bağlanıp 9/9 manifest 200 dönmeden siteyi live moda ALMAYIN
    (frontend'de kod değişikliği yok; mode çözümü env'den).
 
 Geri almak için: değişkeni silin + redeploy → site anında güvenli disabled moda döner.
+
+## 4.5. Relay davranış ayarları (config.env — opsiyonel)
+
+| Ayar | Varsayılan | Anlamı |
+|---|---|---|
+| `VIDEO_MODE` | `transcode` | `transcode` her zaman H.264'e kodlar (saha varsayılanı: NVR substream'inin DTS'i HLS için bozuk — MediaMTX `unable to extract DTS: too many reordered frames` veriyordu). `copy` yeniden kodlamaz; `auto` kaynak H.264 ise copy seçer. |
+| `AUDIO_MODE` | `off` | NVR ses kanalı `Queue input is backward in time` / non-monotonic DTS ürettiği için video-only. `aac` ile ses açılabilir. |
+| `PREFLIGHT_CAMERA` | (boş) | Preflight dry-run'ının kullanacağı kamera. Boşsa **ilk erişilebilir kanal** otomatik seçilir — kapalı kanallar atlanır, hiçbir kanal hardcode edilmez. |
+
+Saha kaynaklı diğer teknik kararlar (kodda sabitlendi ve testlerle korunuyor):
+FFmpeg RTSP zaman aşımı anahtarı `-timeout` (bu build `-rw_timeout` kabul
+etmiyor); girdi tarafında `-fflags +genpts -use_wallclock_as_timestamps 1`;
+PowerShell 5.1'de native FFmpeg stderr'inin terminating error olmaması için
+çağrılar `Invoke-Native` ile `Continue` scope'una alınır (script'in kalanı
+`Stop` güvenliğini korur).
 
 ## 5. Kamera ekleme/değiştirme
 
