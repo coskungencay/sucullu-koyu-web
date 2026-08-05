@@ -115,3 +115,20 @@ BAĞLANIYOR / CANLI (yeşil dot) / BAĞLANTI YOK; sayaç `N/9 AKTİF`.
   korunur; `aria-label` gerçek aksiyonu söyler ("Sesi aç"/"Sesi kapat").
 - Duvarda mobil responsive grid yoktur; kaynak 3×3 tam ekran davranışı
   390/360'ta da birebir korunur (ayrı enhancement, clone kabulü sonrası).
+
+
+## Gerçek yayın katmanı (uygulandı)
+
+```
+Reolink NVS36 → Windows FFmpeg relay (şifreli SRT) → MediaMTX (Coolify)
+→ HTTPS HLS → HlsCameraDriver
+```
+
+- Gateway paketi: `deploy/camera-gateway/` (MediaMTX 1.20.0 pin; yalnız
+  SRT ingest + HLS output; 9 sabit path, catch-all yok; kayıt kapalı).
+- Relay paketi: `tools/windows-camera-relay/` (kamera başına FFmpeg süreci,
+  H.264 copy / H.265→H.264, bounded backoff, log maskeleme).
+- Frontend'e DOKUNULMADI: live mod, `VITE_CAMERA_BASE_URL` tanımlanınca
+  mevcut mode çözümlemesiyle otomatik devreye girer; URL sözleşmesi,
+  sıralama/etiketler, retry/backoff, active count ve cleanup aynen geçerli.
+- İşletme: `docs/CAMERA_DEPLOYMENT_RUNBOOK.md`.

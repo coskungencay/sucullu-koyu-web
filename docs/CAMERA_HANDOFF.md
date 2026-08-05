@@ -1,5 +1,12 @@
 # CAMERA_HANDOFF — Kamera Sistemi Mevcut Durum ve Devir Notları
 
+> **GÜNCELLEME (05.08.2026):** Yeni yayın altyapısı UYGULANDI — Reolink NVS36
+> → Windows FFmpeg relay → şifreli SRT → Coolify MediaMTX → HTTPS HLS.
+> Eski `kameraizle.sucullukoyu.com` altyapısı GERİ GETİRİLMEYECEK; aşağıdaki
+> tarihsel teşhis bölümleri arşiv niteliğindedir. Güncel işletme kılavuzu:
+> `docs/CAMERA_DEPLOYMENT_RUNBOOK.md`. Kanal eşlemesi runbook'ta ve
+> `tools/windows-camera-relay/relay.ps1` içinde sözleşmelidir.
+
 **Denetim tarihi:** 23 Temmuz 2026
 
 ## 1. Mevcut durum (yalnızca belgelendi — onarım denenmedi)

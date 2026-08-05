@@ -58,6 +58,13 @@ node scripts/diff-screenshots.mjs --source reference/screenshots/interactions/so
 
 Sonuçlar ve yöntem: `docs/VISUAL_PARITY.md`.
 
+## Kamera canlı yayın altyapısı (uygulandı)
+
+`deploy/camera-gateway/` (Coolify MediaMTX, SRT→HLS) + `tools/windows-camera-relay/`
+(köy PC'sinde NVR→SRT relay; ZIP: `node scripts/build-relay-zip.mjs` →
+`dist-tools/sucullu-kamera-relay.zip`). İşletme, kurulum, rotation ve geri
+alma: `docs/CAMERA_DEPLOYMENT_RUNBOOK.md`.
+
 ## Kamera yapılandırması (Sprint 3)
 
 `VITE_CAMERA_BASE_URL` boşken (varsayılan) **disabled** mod: hiçbir kamera ağ

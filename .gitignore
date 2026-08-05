@@ -8,3 +8,4 @@ playwright-report/
 private/
 tmp/
 ci-visual-out/
+dist-tools/
