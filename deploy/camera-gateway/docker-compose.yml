@@ -16,10 +16,10 @@ services:
     restart: unless-stopped
     environment:
       - SERVICE_FQDN_MEDIAMTX_8888
+      # NOT: HLS CORS origin listesi mediamtx.yml içindedir (env ile liste
+      # verilemiyor). Yalnızca gerçek secret env üzerinden gelir.
       # SRT publisher passphrase — Coolify'da SECRET olarak tanımlanır (zorunlu).
       - MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE=${MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE:?srt-passphrase-tanimsiz}
-      # HLS CORS origin'i — yalnızca site origin'i (domain geçişinde tek değişecek yer).
-      - MTX_HLSALLOWORIGINS=${MTX_HLSALLOWORIGINS:?hls-origin-tanimsiz}
     ports:
       - "8890:8890/udp"
     expose:

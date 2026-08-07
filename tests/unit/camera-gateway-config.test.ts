@@ -69,9 +69,20 @@ describe('mediamtx.yml sözleşmesi', () => {
     }
   });
 
-  it('config dosyasında gerçek secret yok (env üzerinden gelir)', () => {
+  it('config dosyasında gerçek secret yok (passphrase env üzerinden gelir)', () => {
     expect(yml).toContain("srtPublishPassphrase: ''");
-    expect(yml).toContain('hlsAllowOrigins: []');
+    expect(yml).not.toMatch(/passphrase:\s*\S+/i);
+  });
+
+  it('CORS listesi config’te tanımlı ve site origin’lerini içerir', () => {
+    // Env ile liste verilemiyor (MediaMTX virgüllü değeri tek origin sayıyor).
+    const origins = [...yml.matchAll(/^\s+- (https:\/\/\S+)$/gm)].map((m) => m[1]);
+    expect(origins).toContain('https://sucullukoyu.net');
+    expect(origins).toContain('https://www.sucullukoyu.net');
+    expect(origins.every((o) => o.startsWith('https://'))).toBe(true);
+    expect(yml).not.toContain('hlsAllowOrigins: []');
+    // wildcard ile herkese açılmamalı
+    expect(yml).not.toMatch(/hlsAllowOrigins:\s*\n\s+- ['"]?\*/);
   });
 });
 
@@ -96,7 +107,8 @@ describe('docker-compose sözleşmesi', () => {
     expect(compose).toMatch(
       /MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE=\$\{MTX_PATHDEFAULTS_SRTPUBLISHPASSPHRASE:\?/,
     );
-    expect(compose).toMatch(/MTX_HLSALLOWORIGINS=\$\{MTX_HLSALLOWORIGINS:\?/);
+    // CORS artık config dosyasında; env'de yalnızca gerçek secret kalır
+    expect(compose).not.toContain('MTX_HLSALLOWORIGINS');
   });
 });
 

@@ -35,9 +35,14 @@ hlsSegmentCount: 7
 hlsSegmentDuration: 1s
 hlsPartDuration: 200ms
 hlsSegmentMaxSize: 50M
-# hlsAllowOrigins environment'tan override edilir (MTX_HLSALLOWORIGINS).
-# 1.20.0'da tekil hlsAllowOrigin deprecated'tir.
-hlsAllowOrigins: []
+# CORS: yalnizca siteyi servis eden origin'ler. Liste ENV ile verilemiyor
+# (MediaMTX env parse'i virgullu listeyi tek deger sayiyor; dogrulandi),
+# bu yuzden burada acikca tanimlidir. Secret degildir. Domain degisiminde
+# bu liste + nginx CSP + .env.production birlikte guncellenir.
+hlsAllowOrigins:
+  - https://sucullukoyu.net
+  - https://www.sucullukoyu.net
+  - https://sucullu-koyu-web.46.225.123.167.sslip.io
 
 pathDefaults:
   # Kayıt kapalı — yalnızca canlı yayın.
