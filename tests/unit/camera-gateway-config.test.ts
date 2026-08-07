@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { cameras } from '../../src/camera/camera-config';
@@ -71,7 +71,8 @@ describe('mediamtx.yml sözleşmesi', () => {
 
   it('config dosyasında gerçek secret yok (passphrase env üzerinden gelir)', () => {
     expect(yml).toContain("srtPublishPassphrase: ''");
-    expect(yml).not.toMatch(/passphrase:\s*\S+/i);
+    // Boş string dışında bir passphrase değeri yazılmamış olmalı
+    expect(yml).not.toMatch(/passphrase:\s*(?!''\s*$)\S+/im);
   });
 
   it('CORS listesi config’te tanımlı ve site origin’lerini içerir', () => {
@@ -293,22 +294,10 @@ describe('build-time kamera env sözleşmesi', () => {
     expect(env).toMatch(/^VITE_CAMERA_BASE_URL=\s*$/m);
   });
 
-  it('build çıktısında gateway URL bulunur (live mod kanıtı)', () => {
-    // dist yoksa test atlanır; CI ve lokalde build sonrası anlamlıdır.
-    let found = false;
-    try {
-      const dir = join(ROOT, 'dist', 'assets');
-      for (const f of readdirSync(dir)) {
-        if (f.endsWith('.js') && read(`dist/assets/${f}`).includes('sucullu-koyu-camera')) {
-          found = true;
-          break;
-        }
-      }
-    } catch {
-      return; // dist yok
-    }
-    expect(found, 'dist bundle içinde gateway URL bulunmalı').toBe(true);
-  });
+  // NOT: "dist bundle'ında gateway URL'i var mı" kontrolü bilinçli olarak
+  // yapılmıyor: dist hem production (live) hem build:test (disabled) ile
+  // üretilebildiğinden sonucu deploy moduna bağlı ve kırılgan olur.
+  // Live mod kanıtı deploy sonrası staging smoke ile alınır.
 });
 
 describe('fiziksel kapalı kamera sözleşmesi', () => {
