@@ -240,6 +240,18 @@ describe('windows relay sözleşmesi', () => {
   });
 });
 
+describe('domain geçişi sözleşmesi', () => {
+  it('CSP, .env.production’daki gateway origin’ini içerir', () => {
+    const env = read('.env.production');
+    const url = /^VITE_CAMERA_BASE_URL=(.+)$/m.exec(env)![1].trim();
+    const origin = new URL(url).origin;
+    const csp = read('nginx.conf');
+    // Aksi halde tarayıcı HLS isteklerini bloklar (yaşandı).
+    expect(csp).toContain(`connect-src 'self'`);
+    expect(csp.includes(origin), `CSP ${origin} içermeli`).toBe(true);
+  });
+});
+
 describe('build-time kamera env sözleşmesi', () => {
   it('.env.production gateway URL sağlar; HTTPS ve secret içermez', () => {
     const env = read('.env.production');

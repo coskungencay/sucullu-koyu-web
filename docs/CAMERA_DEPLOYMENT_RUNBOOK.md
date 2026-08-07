@@ -204,14 +204,50 @@ ffmpeg -re -f lavfi -i testsrc2=size=896x512:rate=10 -c:v libx264 -preset veryfa
   (site etkilenmez).
 - **Relay:** `uninstall.cmd` → NVR'a hiçbir kalıcı değişiklik yapılmamıştır.
 
-## 9. Domain geçişi (sucullukoyu.net — ileride)
+## 9. Domain geçişi — sucullukoyu.net (07.08.2026)
 
-Yalnızca şu değerler değişir; mimari değişmez:
+Domain **Cloudflare**'de kayıtlı (nameserver: `george/rita.ns.cloudflare.com`).
 
-1. DNS: `sucullukoyu.net` + `kamera.sucullukoyu.net` A → 46.225.123.167.
-2. Coolify site domaini → `https://sucullukoyu.net`; gateway domaini →
-   `https://kamera.sucullukoyu.net`.
-3. Gateway env `MTX_HLSALLOWORIGIN=https://sucullukoyu.net` + redeploy.
-4. Site env `VITE_CAMERA_BASE_URL=https://kamera.sucullukoyu.net` + redeploy.
-5. Köy PC `config.env` `SRT_HOST=kamera.sucullukoyu.net` + restart (opsiyonel;
-   IP de çalışmaya devam eder).
+### 9.1 DNS kayıtları (Cloudflare panelinde)
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| A | `@` | `46.225.123.167` | **DNS only** (gri bulut) |
+| A | `www` | `46.225.123.167` | **DNS only** |
+| A | `kamera` | `46.225.123.167` | **DNS only (ZORUNLU)** |
+
+**Proxy (turuncu bulut) neden kapalı olmalı:**
+- `kamera` için zorunlu: Cloudflare'in ücretsiz planı proxy üzerinden video/HLS
+  segment dağıtımını ToS ile kısıtlar; ayrıca araya giren proxy HLS gecikmesini
+  ve segment tazeliğini bozar.
+- Site için önerilir: Coolify kendi Let's Encrypt sertifikasını üretir; proxy
+  açıkken sertifika doğrulaması ve "too many redirects" sorunları çıkabilir.
+- SRT ingest (UDP 8890) zaten **IP** üzerinden gider, domainden etkilenmez.
+
+### 9.2 Geçiş sırası (kesintisiz)
+
+Eski `sslip.io` adresleri geçiş boyunca çalışmaya devam eder; ikisi birlikte
+tanımlıdır, doğrulama bitince eski adresler kaldırılır.
+
+1. DNS kayıtları eklenir, yayılması beklenir (`dig +short kamera.sucullukoyu.net`).
+2. Coolify → **camera-gateway** → Domains: `https://kamera.sucullukoyu.net`
+   eklenir (eski domain kalır). TLS sertifikası beklenir.
+   Doğrulama: `curl -sI https://kamera.sucullukoyu.net/kamera6/index.m3u8` → 200/404.
+3. Coolify → **sucullu-koyu-web** → Domains: `https://sucullukoyu.net` ve
+   `https://www.sucullukoyu.net` eklenir (eski domain kalır).
+4. Gateway env `MTX_HLSALLOWORIGINS` → site origin'leri virgülle:
+   `https://sucullukoyu.net,https://www.sucullukoyu.net,<eski sslip.io>` +
+   gateway redeploy. (Eksik origin = tarayıcıda CORS hatası.)
+5. `.env.production` → `VITE_CAMERA_BASE_URL=https://kamera.sucullukoyu.net`
+   + site redeploy. CSP zaten iki gateway domainini de içerir.
+6. Doğrulama: yeni adreste 6 kamera oynuyor, console error 0, CORS/CSP temiz.
+7. Geçiş onaylanınca: eski `sslip.io` domainleri Coolify'dan, eski gateway
+   origin'i CSP ve `MTX_HLSALLOWORIGINS`'ten kaldırılır.
+8. İsteğe bağlı: köy PC `config.env` → `SRT_HOST=kamera.sucullukoyu.net`
+   (IP de çalışmaya devam eder; değiştirilirse `stop.cmd` + `start.cmd`).
+
+### 9.3 Not — www yönlendirmesi
+
+Kaynak site `www.sucullukoyu.com` kullanıyordu. Yeni domainde hem apex hem
+`www` tanımlanır; kanonik adres kararı (apex mi www mi) SEO için ayrıca
+verilmelidir (canonical/sitemap ile birlikte).
